@@ -3,6 +3,12 @@ allowed-tools: AskUserQuestion, Read, Write, Glob, Grep
 description: Create a PLANNING.md from PRD.md with phases, tasks, and subtasks following Baby Step philosophy
 ---
 
+## IMPORTANT: Do NOT read docs/TASK_PLANNING.md
+
+That document is for planning **individual tasks** within an existing PLANNING.md. This command creates the **full PLANNING.md** from a PRD — a different level of planning. Reading TASK_PLANNING.md will confuse the output.
+
+---
+
 ## Instructions
 
 You are a senior software architect creating a detailed implementation plan from a PRD (Product Requirements Document).
@@ -50,36 +56,33 @@ Brief summary of the project and this planning document.
 
 ---
 
-## Phases
+## Prerrequisitos (trabajo manual)
 
-### Phase 1: [Phase Name]
-**Goal:** [What this phase accomplishes]
-**Prerequisite:** [Previous phase or "None"]
+Antes de empezar, necesitas tener configurado:
 
-#### Tasks
-
-##### Task 1.1: [Task Name]
-**Objective:** [Clear description of what this task accomplishes]
-**Baby Step Checkpoint:** ✅ Tests | ✅ Lint | ✅ Types
-
-**Subtasks:**
-- [ ] 1.1.1 - [Subtask description]
-- [ ] 1.1.2 - [Subtask description]
-- [ ] 1.1.3 - [Subtask description]
-
-**Files to modify/create:**
-- `path/to/file.ts` - [Brief description of changes]
-
-**Definition of Done:**
-- [ ] All subtasks completed
-- [ ] `npm run test:e2e` passes
-- [ ] `npm run typecheck` passes
-- [ ] `npm run lint` passes
+- [ ] [Prerequisite 1 - e.g., Account in external service]
+- [ ] [Prerequisite 2 - e.g., API keys configured]
+- [ ] [Prerequisite 3 - e.g., Environment variables in `.env.example`]
 
 ---
 
-##### Task 1.2: [Next Task]
-...
+## Phases
+
+### Phase 1: [Phase Name]
+
+**🔴 Antes:** [Current state - what exists before this phase]
+**🟢 Después:** [Expected state - what will exist after this phase]
+
+#### Task 1.1: [Task Name]
+
+- [ ] [Concrete objective 1 - specific action to accomplish]
+- [ ] [Concrete objective 2 - specific action to accomplish]
+- [ ] [Concrete objective 3 - specific action to accomplish]
+- [ ] [Verify that tests pass and implementation works correctly]
+
+#### Task 1.2: [Next Task]
+
+- [ ] ...
 
 ---
 
@@ -124,6 +127,66 @@ Sequential list of all tasks in recommended order:
 **Status Legend:** ⬜ Not Started | 🔄 In Progress | ✅ Complete | ⏸️ Blocked
 ```
 
+---
+
+## Examples
+
+### Example 1: Phase with Before/After
+```markdown
+### Phase 1: Base de datos
+
+**🔴 Antes:** No hay esquema de base de datos, no hay ORM configurado.
+**🟢 Después:** Drizzle configurado, tablas creadas, migraciones funcionando.
+
+#### Task 1.1: Configurar Drizzle ORM
+
+- [ ] Instalar `drizzle-orm` y `drizzle-kit`
+- [ ] Instalar driver de PostgreSQL (`@neondatabase/serverless`)
+- [ ] Crear `drizzle.config.ts`
+- [ ] Crear conexión a la base de datos en `app/db/index.ts`
+- [ ] Verificar conexión con query simple (`SELECT 1`)
+```
+
+### Example 2: Authentication Tasks
+```markdown
+#### Task 2.1: Configurar Better Auth
+
+- [ ] Instalar `better-auth`
+- [ ] Crear `app/lib/auth.ts` con configuración base
+- [ ] Configurar provider de email/password
+- [ ] Configurar adapter de Drizzle para persistencia
+- [ ] Verificar que Better Auth arranca sin errores
+
+#### Task 2.2: Rutas de autenticación
+
+- [ ] Crear ruta `/auth/signup` con formulario de registro
+- [ ] Crear ruta `/auth/login` con formulario de login
+- [ ] Crear ruta `/auth/logout` (action)
+- [ ] Implementar lógica de registro (crear usuario en DB)
+- [ ] Implementar lógica de login (verificar credenciales, crear sesión)
+- [ ] Test E2E: registrar usuario, hacer login, verificar sesión
+```
+
+### Example 3: Prerequisites Section
+```markdown
+## Prerrequisitos (trabajo manual)
+
+Antes de empezar, necesitas tener configurado:
+
+- [x] Cuenta en Neon con una base de datos PostgreSQL creada
+- [x] Cuenta en Stripe (modo test) con API keys
+- [x] Variables de entorno documentadas en `.env.example`
+```
+
+**Guidelines:**
+- ✅ Write concrete, actionable steps
+- ✅ Include verification/testing as part of the checklist
+- ✅ Focus on **what** needs to be accomplished
+- ✅ Keep each item specific and measurable
+- ✅ Order items logically (setup → implementation → verification)
+
+---
+
 ### Planning Rules (MUST FOLLOW)
 
 1. **Baby Step Philosophy:**
@@ -146,13 +209,15 @@ Sequential list of all tasks in recommended order:
    - UI orchestration in hooks, not inline
 
 4. **Testing Strategy:**
-   - Plan E2E tests alongside features
-   - Each phase should include test tasks
-   - Regression tests for each user-facing feature
+   - Each task MUST include verification/testing steps in its checklist
+   - Never complete a task without confirming tests pass
+   - E2E tests are part of the task itself, not a separate phase
+   - Each user-facing change should include its regression test in the same task
 
-5. **I18N Awareness:**
-   - Plan i18n keys for all user-facing text
-   - Group i18n tasks logically with their UI tasks
+5. **I18N Integration:**
+   - i18n keys MUST be part of the UI task itself, never a separate phase
+   - Each UI task checklist must include creating/updating the necessary i18n keys
+   - You cannot test UI without i18n keys - they're part of the implementation, not an afterthought
 
 6. **Incremental Delivery:**
    - Prefer working features over partial implementations
