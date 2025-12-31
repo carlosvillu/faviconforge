@@ -189,6 +189,40 @@ The template is configured for Netlify deployment but can be adapted for other p
 
 See [DEPLOYMENT.md](docs/DEPLOYMENT.md) for detailed deployment instructions and environment variable configuration.
 
+## Syncing with Template
+
+This project was created from [saas-template](https://github.com/carlosvillu/saas-template). To pull updates from the template:
+
+### First time setup
+
+```bash
+git remote add template https://github.com/carlosvillu/saas-template.git
+```
+
+### Pull updates
+
+```bash
+git fetch template
+git merge template/main --allow-unrelated-histories
+```
+
+Resolve any conflicts, then:
+
+```bash
+git add .
+git commit -m "Merge updates from template"
+```
+
+### Selective updates (cherry-pick)
+
+If you only want specific commits:
+
+```bash
+git fetch template
+git log template/main --oneline  # View available commits
+git cherry-pick <commit-hash>    # Apply specific commits
+```
+
 ## License
 
 MIT
