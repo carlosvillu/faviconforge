@@ -16,7 +16,10 @@ export async function createAuthSchema(ctx: DbContext): Promise<void> {
       email_verified BOOLEAN DEFAULT false,
       image TEXT,
       created_at TIMESTAMP NOT NULL DEFAULT now(),
-      updated_at TIMESTAMP NOT NULL DEFAULT now()
+      updated_at TIMESTAMP NOT NULL DEFAULT now(),
+      is_premium BOOLEAN DEFAULT false NOT NULL,
+      premium_since TIMESTAMP,
+      stripe_customer_id TEXT
     )`
   )
 
