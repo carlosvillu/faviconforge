@@ -45,5 +45,11 @@
   "buy_premium": "Buy Premium",
   "premium_price": "€5 one-time",
   "premium_benefits_title": "Premium Benefits",
-  "premium_benefits_description": "Get all favicon formats including PWA, Apple Touch icons, Windows tiles, and manifest customization."
+  "premium_benefits_description": "Get all favicon formats including PWA, Apple Touch icons, Windows tiles, and manifest customization.",
+
+  "image_invalid_format": "Invalid image format. Allowed: {{formats}}",
+  "image_file_too_large": "File is too large. Maximum size: {{maxSizeMB}}MB",
+  "image_too_small": "Image is too small. Minimum size: {{minSize}}x{{minSize}} pixels",
+  "image_not_square": "Image must be square (same width and height)",
+  "image_load_error": "Failed to load image. Please try another file."
 }

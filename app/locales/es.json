@@ -45,5 +45,11 @@
   "buy_premium": "Comprar Premium",
   "premium_price": "€5 pago único",
   "premium_benefits_title": "Beneficios Premium",
-  "premium_benefits_description": "Obtén todos los formatos de favicon incluyendo PWA, iconos Apple Touch, tiles de Windows y personalización del manifest."
+  "premium_benefits_description": "Obtén todos los formatos de favicon incluyendo PWA, iconos Apple Touch, tiles de Windows y personalización del manifest.",
+
+  "image_invalid_format": "Formato de imagen no válido. Permitidos: {{formats}}",
+  "image_file_too_large": "El archivo es demasiado grande. Tamaño máximo: {{maxSizeMB}}MB",
+  "image_too_small": "La imagen es demasiado pequeña. Tamaño mínimo: {{minSize}}x{{minSize}} píxeles",
+  "image_not_square": "La imagen debe ser cuadrada (mismo ancho y alto)",
+  "image_load_error": "Error al cargar la imagen. Por favor, intenta con otro archivo."
 }

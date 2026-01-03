@@ -25,6 +25,8 @@ Before creating any planning document:
 - Do NOT start writing the planning file until you have gathered ALL the information required
 - Questions may cover: scope, edge cases, UI/UX expectations, business rules, integration details, etc.
 - **If the task involves creating tests:** MUST read `docs/TESTING.md` before planning to understand project conventions, existing fixtures, and patterns
+- **If the task involves creating server-side services (`app/services/*.server.ts`):** MUST read `docs/TESTING.md` section "Testing Services via E2E" to understand how to test services via test-only endpoints
+- **If the task involves creating client-side services (`app/services/*.ts` without `.server`):** MUST read `docs/TESTING.md` section "Testing Client-Side Services" to understand how to test with Vitest unit tests
 
 ## Planning File Structure
 

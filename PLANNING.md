@@ -50,11 +50,14 @@ Antes de empezar, necesitas tener configurado:
 
 #### Task 0.2: Create premium status helpers
 
-- [ ] Create `app/services/premium.ts` with `isPremiumUser(userId: string): Promise<boolean>`
-- [ ] Create `getPremiumStatus(userId: string): Promise<{isPremium: boolean, premiumSince: Date | null}>`
-- [ ] Create `grantPremium(userId: string, stripeCustomerId: string): Promise<void>`
-- [ ] Add i18n keys for premium-related UI text (en.json and es.json)
-- [ ] Run `npm run typecheck` and `npm run lint`
+- [x] Create `app/services/premium.server.ts` with `isPremiumUser(userId: string): Promise<boolean>`
+- [x] Create `getPremiumStatus(userId: string): Promise<{isPremium: boolean, premiumSince: Date | null}>`
+- [x] Create `grantPremium(userId: string, stripeCustomerId: string): Promise<void>`
+- [x] Add i18n keys for premium-related UI text (en.json and es.json)
+- [x] Create test endpoint `app/routes/api.__test__.premium.tsx` for E2E testing
+- [x] Write E2E tests in `tests/e2e/premium-service.spec.ts`
+- [x] Run `npm run test:e2e -- --retries=1` and verify tests pass
+- [x] Run `npm run typecheck` and `npm run lint`
 
 ---
 
@@ -65,11 +68,14 @@ Antes de empezar, necesitas tener configurado:
 
 #### Task 1.1: Create image validation service
 
+- [ ] Setup Vitest for unit testing (install vitest, @vitest/coverage-v8, jsdom; create vitest.config.ts; add npm scripts)
 - [ ] Create `app/services/imageValidation.ts` with validation functions
 - [ ] Implement `validateImageFile(file: File): ValidationResult` - checks format (PNG/JPEG/WebP)
 - [ ] Implement `validateImageDimensions(img: HTMLImageElement): ValidationResult` - checks 512x512 min, square
 - [ ] Implement `validateFileSize(file: File): ValidationResult` - checks max 10MB
 - [ ] Add i18n keys for all validation error messages (en.json and es.json)
+- [ ] Write unit tests in `tests/unit/imageValidation.test.ts`
+- [ ] Run `npm run test:unit` and verify tests pass
 - [ ] Run `npm run typecheck` and `npm run lint`
 
 #### Task 1.2: Create upload route and component
@@ -118,6 +124,8 @@ Antes de empezar, necesitas tener configurado:
 - [ ] Implement `generateManifest(options: ManifestOptions): string` - customizable manifest.json
 - [ ] Implement `generateBrowserConfig(): string` - Windows browserconfig.xml
 - [ ] Implement `generateHTMLSnippet(isPremium: boolean): string` - ready-to-use HTML code
+- [ ] Write unit tests in `tests/unit/faviconGeneration.test.ts`
+- [ ] Run `npm run test:unit` and verify tests pass
 - [ ] Run `npm run typecheck` and `npm run lint`
 
 #### Task 2.3: Create preview route and components
@@ -154,6 +162,8 @@ Antes de empezar, necesitas tener configurado:
 - [ ] Include proper folder structure as per PRD (web/, ios/, android/, windows/, pwa/)
 - [ ] Include `snippet.html` with ready-to-use code
 - [ ] Include `README.md` in premium ZIP only
+- [ ] Write unit tests in `tests/unit/zipGeneration.test.ts`
+- [ ] Run `npm run test:unit` and verify tests pass
 - [ ] Run `npm run typecheck` and `npm run lint`
 
 #### Task 3.2: Create download route and component
