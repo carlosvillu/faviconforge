@@ -2,926 +2,379 @@
 
 ## Overview
 
-FaviconForge is a freemium web application that generates all required favicon formats from a single uploaded image. Users upload a square image (512x512 minimum) and receive a complete ZIP package with properly formatted favicon files and ready-to-use HTML code.
+FaviconForge is a web application that generates all required favicon formats from a single uploaded image. This planning document outlines the implementation phases to deliver a complete freemium favicon generator with Google OAuth authentication and Stripe payments.
 
-**Business Model:**
-- **Free tier (anonymous):** Basic formats (ICO, PNG 16/32/48)
-- **Premium tier (€5 one-time):** All formats including PWA, Apple, Windows + manifest.json customization
+**Business Model:** Freemium with lifetime premium access (€5 one-time)
 
-**Key Technical Decisions:**
-- All image processing happens client-side (Canvas API + JSZip + png-to-ico)
-- No image data persists to server
-- Stripe Checkout with webhooks for reliable payment handling
-- Google OAuth only (via existing Better Auth setup)
-- Device frame previews for realistic favicon visualization
+- **Free:** Basic favicon formats (ICO, PNG 16/32/48)
+- **Premium:** All formats including PWA, Apple, Windows + manifest customization
+
+---
+
+## Prerrequisitos (trabajo manual)
+
+Antes de empezar, necesitas tener configurado:
+
+- [x] Cuenta de Google Cloud Console con OAuth 2.0 credentials (Client ID + Secret)
+- [x] Cuenta de Stripe (modo test) con API keys (Secret Key + Publishable Key)
+- [x] Stripe Webhook endpoint configurado para recibir eventos de pago
+- [x] Cuenta de Resend con API key para envío de emails (contact form)
+- [x] Google Analytics 4 property creado con Measurement ID
+- [x] Variables de entorno documentadas en `.env.example`:
+  - `GOOGLE_CLIENT_ID`
+  - `GOOGLE_CLIENT_SECRET`
+  - `STRIPE_SECRET_KEY`
+  - `STRIPE_PUBLISHABLE_KEY`
+  - `STRIPE_WEBHOOK_SECRET`
+  - `RESEND_API_KEY`
+  - `GA_MEASUREMENT_ID`
 
 ---
 
 ## Phases
 
-### Phase 0: Foundation & Database Schema
+### Phase 0: Database & Premium Infrastructure
 
-**Goal:** Extend the existing database schema to support premium users and prepare the project structure.
-**Prerequisite:** None
+**🔴 Antes:** Database tiene schema básico de Better Auth (users, sessions, accounts, verifications). No hay campos para premium status ni Stripe.
+**🟢 Después:** Users table tiene campos `isPremium`, `premiumSince`, `stripeCustomerId`. Helper functions para verificar premium status.
 
-#### Tasks
+#### Task 0.1: Add premium fields to database schema
 
-##### Task 0.1: Extend User Schema for Premium
+- [x] Add `isPremium` (boolean, default false) to users table in `app/db/schema/users.ts`
+- [x] Add `premiumSince` (timestamp, nullable) to users table
+- [x] Add `stripeCustomerId` (varchar, nullable) to users table
+- [x] Generate migration with `npm run db:generate`
+- [x] Run migration with `npm run db:migrate`
+- [x] Verify migration applied correctly with manual DB check
+- [x] Run `npm run typecheck` and `npm run lint` to verify no type errors
 
-**Objective:** Add premium-related columns to the users table.
-**Baby Step Checkpoint:** ✅ Tests | ✅ Lint | ✅ Types
+#### Task 0.2: Create premium status helpers
 
-**Subtasks:**
-- [ ] 0.1.1 - Add `is_premium` boolean column (default: false)
-- [ ] 0.1.2 - Add `premium_since` timestamp column (nullable)
-- [ ] 0.1.3 - Add `stripe_customer_id` varchar column (nullable)
-- [ ] 0.1.4 - Generate and run database migration
-
-**Files to modify/create:**
-- `app/db/schema/users.ts` - Add new columns to users table
-- `drizzle/migrations/XXXX_add_premium_fields.sql` - Generated migration
-
----
-
-##### Task 0.2: Install Required Dependencies
-
-**Objective:** Add npm packages for image processing, ZIP generation, and payments.
-**Baby Step Checkpoint:** ✅ Tests | ✅ Lint | ✅ Types
-
-**Subtasks:**
-- [ ] 0.2.1 - Install `jszip` for ZIP file generation
-- [ ] 0.2.2 - Install `png-to-ico` for ICO file generation
-- [ ] 0.2.3 - Install `stripe` and `@stripe/stripe-js` for payments
-- [ ] 0.2.4 - Install `resend` for contact form emails
-
-**Files to modify/create:**
-- `package.json` - Add dependencies
+- [ ] Create `app/services/premium.ts` with `isPremiumUser(userId: string): Promise<boolean>`
+- [ ] Create `getPremiumStatus(userId: string): Promise<{isPremium: boolean, premiumSince: Date | null}>`
+- [ ] Create `grantPremium(userId: string, stripeCustomerId: string): Promise<void>`
+- [ ] Add i18n keys for premium-related UI text (en.json and es.json)
+- [ ] Run `npm run typecheck` and `npm run lint`
 
 ---
 
-##### Task 0.3: Add Environment Variables Documentation
+### Phase 1: Image Upload & Validation
 
-**Objective:** Document all required environment variables for the project.
-**Baby Step Checkpoint:** ✅ Tests | ✅ Lint | ✅ Types
+**🔴 Antes:** No hay funcionalidad de subida de imágenes. Landing page es genérica.
+**🟢 Después:** Usuario puede subir imagen, se valida (formato, tamaño, aspecto), se almacena en sessionStorage, se redirige a preview.
 
-**Subtasks:**
-- [ ] 0.3.1 - Add Stripe variables to .env.example
-- [ ] 0.3.2 - Add Resend API key to .env.example
-- [ ] 0.3.3 - Add GA4 measurement ID to .env.example
-- [ ] 0.3.4 - Update docs/DEPLOYMENT.md with new variables
+#### Task 1.1: Create image validation service
 
-**Files to modify/create:**
-- `.env.example` - Add new environment variables
-- `docs/DEPLOYMENT.md` - Document new variables
+- [ ] Create `app/services/imageValidation.ts` with validation functions
+- [ ] Implement `validateImageFile(file: File): ValidationResult` - checks format (PNG/JPEG/WebP)
+- [ ] Implement `validateImageDimensions(img: HTMLImageElement): ValidationResult` - checks 512x512 min, square
+- [ ] Implement `validateFileSize(file: File): ValidationResult` - checks max 10MB
+- [ ] Add i18n keys for all validation error messages (en.json and es.json)
+- [ ] Run `npm run typecheck` and `npm run lint`
 
----
+#### Task 1.2: Create upload route and component
 
-### Phase 1: Core Image Processing Engine
+- [ ] Register `/upload` route in `app/routes.ts`
+- [ ] Create `app/routes/upload.tsx` with loader (no auth required)
+- [ ] Create `app/components/ImageUploader.tsx` with drag-and-drop zone
+- [ ] Create `app/hooks/useImageUpload.ts` to handle file selection, validation, preview
+- [ ] Store validated image as base64 in sessionStorage
+- [ ] Redirect to `/preview` on successful upload
+- [ ] Add i18n keys for upload UI (title, drop zone text, requirements)
+- [ ] Run `npm run typecheck` and `npm run lint`
+- [ ] Write E2E test: upload valid image → redirects to preview
+- [ ] Write E2E test: upload invalid image → shows error message
+- [ ] Run `npm run test:e2e -- --retries=1` and verify tests pass
 
-**Goal:** Build the client-side image processing pipeline that generates all favicon formats.
-**Prerequisite:** Phase 0
+#### Task 1.3: Update landing page for FaviconForge
 
-#### Tasks
-
-##### Task 1.1: Create Image Validation Service
-
-**Objective:** Validate uploaded images meet requirements (512x512 min, square, PNG/JPEG/WebP, <10MB).
-**Baby Step Checkpoint:** ✅ Tests | ✅ Lint | ✅ Types
-
-**Subtasks:**
-- [ ] 1.1.1 - Create `app/services/image-validation.ts` with validation logic
-- [ ] 1.1.2 - Validate file type (PNG, JPEG, WebP only)
-- [ ] 1.1.3 - Validate file size (<10MB)
-- [ ] 1.1.4 - Validate dimensions (512x512 minimum, must be square)
-- [ ] 1.1.5 - Return structured error codes for each validation failure
-
-**Files to modify/create:**
-- `app/services/image-validation.ts` - Image validation service
+- [ ] Update `app/routes/home.tsx` hero section with FaviconForge value proposition
+- [ ] Add CTA button linking to `/upload`
+- [ ] Add brief explanation of what formats are generated (free vs premium)
+- [ ] Add trust signals (no account needed for free tier, client-side processing)
+- [ ] Update i18n keys for new landing content
+- [ ] Run `npm run typecheck` and `npm run lint`
 
 ---
 
-##### Task 1.2: Create Canvas Resizing Service
+### Phase 2: Favicon Generation & Preview
 
-**Objective:** Resize uploaded image to all required favicon sizes using Canvas API.
-**Baby Step Checkpoint:** ✅ Tests | ✅ Lint | ✅ Types
+**🔴 Antes:** Imagen subida está en sessionStorage pero no hay generación de favicons ni vista previa.
+**🟢 Después:** Usuario ve su favicon en múltiples contextos (browser tabs, iOS, Android, Windows). Todos los formatos generados client-side.
 
-**Subtasks:**
-- [ ] 1.2.1 - Create `app/services/canvas-resize.ts` with resizing logic
-- [ ] 1.2.2 - Implement resize function that returns PNG blob for any target size
-- [ ] 1.2.3 - Add high-quality image scaling (imageSmoothingQuality: 'high')
-- [ ] 1.2.4 - Create helper to generate all free tier sizes (16, 32, 48)
-- [ ] 1.2.5 - Create helper to generate all premium sizes (180, 192, 512, 150)
+#### Task 2.1: Install favicon generation dependencies
 
-**Files to modify/create:**
-- `app/services/canvas-resize.ts` - Canvas resizing service
+- [ ] Install `jszip` for ZIP package generation
+- [ ] Install `png-to-ico` for ICO file generation
+- [ ] Verify bundle size impact is acceptable
+- [ ] Run `npm run typecheck` and `npm run build` to verify no issues
 
----
+#### Task 2.2: Create favicon generation service
 
-##### Task 1.3: Create ICO Generation Service
+- [ ] Create `app/services/faviconGeneration.ts`
+- [ ] Implement `resizeImage(imageData: string, size: number): Promise<Blob>` using Canvas API
+- [ ] Implement `generatePNGFormats(imageData: string): Promise<FaviconPNG[]>` - all PNG sizes
+- [ ] Implement `generateICO(imageData: string): Promise<Blob>` - multi-resolution ICO
+- [ ] Implement `generateManifest(options: ManifestOptions): string` - customizable manifest.json
+- [ ] Implement `generateBrowserConfig(): string` - Windows browserconfig.xml
+- [ ] Implement `generateHTMLSnippet(isPremium: boolean): string` - ready-to-use HTML code
+- [ ] Run `npm run typecheck` and `npm run lint`
 
-**Objective:** Generate multi-resolution ICO file from PNG images using png-to-ico.
-**Baby Step Checkpoint:** ✅ Tests | ✅ Lint | ✅ Types
+#### Task 2.3: Create preview route and components
 
-**Subtasks:**
-- [ ] 1.3.1 - Create `app/services/ico-generator.ts`
-- [ ] 1.3.2 - Implement ICO generation with 16x16, 32x32, and 48x48 layers
-- [ ] 1.3.3 - Handle png-to-ico library integration (browser-compatible)
-- [ ] 1.3.4 - Return ICO as Blob
-
-**Files to modify/create:**
-- `app/services/ico-generator.ts` - ICO file generation service
-
----
-
-##### Task 1.4: Create Manifest Generator Service
-
-**Objective:** Generate manifest.json and browserconfig.xml files for premium users.
-**Baby Step Checkpoint:** ✅ Tests | ✅ Lint | ✅ Types
-
-**Subtasks:**
-- [ ] 1.4.1 - Create `app/services/manifest-generator.ts`
-- [ ] 1.4.2 - Generate manifest.json with customizable: name, short_name, theme_color, background_color
-- [ ] 1.4.3 - Generate browserconfig.xml for Windows tiles
-- [ ] 1.4.4 - Return files as strings
-
-**Files to modify/create:**
-- `app/services/manifest-generator.ts` - PWA manifest generation service
+- [ ] Register `/preview` route in `app/routes.ts`
+- [ ] Create `app/routes/preview.tsx` with loader (check sessionStorage has image, else redirect to /upload)
+- [ ] Create `app/components/FaviconPreview.tsx` - container component
+- [ ] Create `app/components/previews/BrowserTabPreview.tsx` - Chrome/Safari tab mockup
+- [ ] Create `app/components/previews/IOSHomePreview.tsx` - iOS home screen mockup
+- [ ] Create `app/components/previews/AndroidHomePreview.tsx` - Android home screen mockup
+- [ ] Create `app/components/previews/WindowsTilePreview.tsx` - Windows Start menu mockup
+- [ ] Create `app/components/previews/BookmarkPreview.tsx` - Bookmark bar mockup
+- [ ] Create `app/hooks/useFaviconGeneration.ts` - orchestrates generation on preview load
+- [ ] Add "Continue to Download" CTA button
+- [ ] Add "Upload different image" link
+- [ ] Add i18n keys for preview UI
+- [ ] Run `npm run typecheck` and `npm run lint`
+- [ ] Write E2E test: navigate to /preview with valid sessionStorage → previews render
+- [ ] Write E2E test: navigate to /preview without sessionStorage → redirect to /upload
+- [ ] Run `npm run test:e2e -- --retries=1` and verify tests pass
 
 ---
 
-##### Task 1.5: Create ZIP Packaging Service
+### Phase 3: ZIP Download (Free Tier)
 
-**Objective:** Package all generated files into a downloadable ZIP using JSZip.
-**Baby Step Checkpoint:** ✅ Tests | ✅ Lint | ✅ Types
+**🔴 Antes:** Previews se muestran pero no hay forma de descargar los archivos.
+**🟢 Después:** Usuario puede descargar ZIP con formatos básicos gratuitos (ICO, PNG 16/32/48). Premium formats visible pero bloqueados.
 
-**Subtasks:**
-- [ ] 1.5.1 - Create `app/services/zip-packager.ts`
-- [ ] 1.5.2 - Implement free tier ZIP structure (web/ folder only)
-- [ ] 1.5.3 - Implement premium tier ZIP structure (web/, ios/, android/, windows/, pwa/)
-- [ ] 1.5.4 - Generate snippet.html with implementation instructions
-- [ ] 1.5.5 - Generate README.md for premium (localized based on user's locale)
-- [ ] 1.5.6 - Return ZIP as Blob for download
+#### Task 3.1: Create ZIP generation service
 
-**Files to modify/create:**
-- `app/services/zip-packager.ts` - ZIP packaging service
+- [ ] Create `app/services/zipGeneration.ts`
+- [ ] Implement `generateFreeZip(faviconData: GeneratedFavicons): Promise<Blob>` - basic formats only
+- [ ] Implement `generatePremiumZip(faviconData: GeneratedFavicons, manifestOptions: ManifestOptions): Promise<Blob>` - all formats
+- [ ] Include proper folder structure as per PRD (web/, ios/, android/, windows/, pwa/)
+- [ ] Include `snippet.html` with ready-to-use code
+- [ ] Include `README.md` in premium ZIP only
+- [ ] Run `npm run typecheck` and `npm run lint`
 
----
+#### Task 3.2: Create download route and component
 
-##### Task 1.6: Create Favicon Generation Orchestrator Hook
-
-**Objective:** Create a React hook that orchestrates the entire favicon generation pipeline.
-**Baby Step Checkpoint:** ✅ Tests | ✅ Lint | ✅ Types
-
-**Subtasks:**
-- [ ] 1.6.1 - Create `app/hooks/useFaviconGenerator.ts`
-- [ ] 1.6.2 - Manage generation state (idle, processing, complete, error)
-- [ ] 1.6.3 - Expose `generate(image, options)` function
-- [ ] 1.6.4 - Track progress percentage for UI feedback
-- [ ] 1.6.5 - Handle errors gracefully with user-friendly messages
-
-**Files to modify/create:**
-- `app/hooks/useFaviconGenerator.ts` - Favicon generation orchestrator hook
+- [ ] Register `/download` route in `app/routes.ts`
+- [ ] Create `app/routes/download.tsx` with loader (check sessionStorage, get user premium status if logged in)
+- [ ] Create `app/components/DownloadSection.tsx` - two-column layout (free vs premium)
+- [ ] Create `app/components/FreePackageCard.tsx` - shows free formats with download button
+- [ ] Create `app/components/PremiumPackageCard.tsx` - shows premium formats with lock/unlock state
+- [ ] Create `app/hooks/useDownload.ts` - handles ZIP generation and download trigger
+- [ ] Implement free download (always available, triggers immediately)
+- [ ] Show premium upsell for non-premium users
+- [ ] Add i18n keys for download UI (package contents, CTAs, premium pitch)
+- [ ] Run `npm run typecheck` and `npm run lint`
+- [ ] Write E2E test: anonymous user downloads free ZIP → ZIP contains correct files
+- [ ] Run `npm run test:e2e -- --retries=1` and verify tests pass
 
 ---
 
-### Phase 2: Upload & Preview UI
+### Phase 4: Google OAuth (Premium Requirement)
 
-**Goal:** Build the upload interface and preview mockups for favicon visualization.
-**Prerequisite:** Phase 1
+**🔴 Antes:** Auth setup existe con email/password. Google OAuth está configurado pero no conectado al flujo premium.
+**🟢 Después:** Usuario puede hacer login con Google. Solo Google OAuth disponible (sin email/password). Premium check funciona tras login.
 
-#### Tasks
+#### Task 4.1: Configure Google-only authentication
 
-##### Task 2.1: Create Image Upload Component
+- [ ] Update `app/lib/auth.ts` to make Google the only OAuth provider visible in UI
+- [ ] Remove email/password signup option from UI (keep backend for existing users if any)
+- [ ] Update `app/routes/auth.login.tsx` to show only Google button
+- [ ] Update `app/routes/auth.signup.tsx` to show only Google button (or merge with login)
+- [ ] Update header to show "Sign in with Google" when logged out
+- [ ] Update i18n keys for Google-only auth
+- [ ] Run `npm run typecheck` and `npm run lint`
 
-**Objective:** Build drag-and-drop image upload component with validation feedback.
-**Baby Step Checkpoint:** ✅ Tests | ✅ Lint | ✅ Types
+#### Task 4.2: Integrate premium status with auth
 
-**Subtasks:**
-- [ ] 2.1.1 - Create `app/components/ImageUploader.tsx`
-- [ ] 2.1.2 - Implement drag-and-drop zone with visual feedback
-- [ ] 2.1.3 - Add file picker fallback button
-- [ ] 2.1.4 - Display requirements (512x512 min, square, PNG/JPEG/WebP)
-- [ ] 2.1.5 - Show inline error messages for validation failures
-- [ ] 2.1.6 - Store uploaded image in sessionStorage (base64)
-
-**Files to modify/create:**
-- `app/components/ImageUploader.tsx` - Image upload component
-
----
-
-##### Task 2.2: Create Device Frame Preview Components
-
-**Objective:** Build realistic device frame mockups showing favicon in context.
-**Baby Step Checkpoint:** ✅ Tests | ✅ Lint | ✅ Types
-
-**Subtasks:**
-- [ ] 2.2.1 - Create `app/components/previews/BrowserTabPreview.tsx` (Chrome, Safari)
-- [ ] 2.2.2 - Create `app/components/previews/iOSHomeScreenPreview.tsx`
-- [ ] 2.2.3 - Create `app/components/previews/AndroidHomeScreenPreview.tsx`
-- [ ] 2.2.4 - Create `app/components/previews/WindowsTilePreview.tsx`
-- [ ] 2.2.5 - Create `app/components/previews/BookmarkBarPreview.tsx`
-- [ ] 2.2.6 - Create `app/components/previews/PWASplashPreview.tsx`
-- [ ] 2.2.7 - Create `app/components/previews/PreviewGrid.tsx` to compose all previews
-
-**Files to modify/create:**
-- `app/components/previews/*.tsx` - Device frame preview components
+- [ ] Update `app/routes/download.tsx` loader to fetch premium status for logged-in users
+- [ ] Create `app/context/PremiumContext.tsx` to cache premium status client-side
+- [ ] Update `PremiumPackageCard.tsx` to show different states:
+  - Not logged in: "Sign in with Google to buy premium"
+  - Logged in, not premium: "Buy Premium - €5"
+  - Premium: Download button enabled
+- [ ] Update i18n keys for premium states
+- [ ] Run `npm run typecheck` and `npm run lint`
+- [ ] Write E2E test: login with Google (mocked) → premium status reflected in UI
+- [ ] Run `npm run test:e2e -- --retries=1` and verify tests pass
 
 ---
 
-##### Task 2.3: Create Upload Page Route
+### Phase 5: Stripe Payment Integration
 
-**Objective:** Build the /upload page with image uploader and navigation.
-**Baby Step Checkpoint:** ✅ Tests | ✅ Lint | ✅ Types
+**🔴 Antes:** Usuario puede ver formatos premium pero no puede pagar.
+**🟢 Después:** Usuario puede pagar €5 via Stripe Checkout. Webhook actualiza premium status. Usuario puede descargar premium ZIP.
 
-**Subtasks:**
-- [ ] 2.3.1 - Create `app/routes/upload.tsx` route module
-- [ ] 2.3.2 - Compose ImageUploader component
-- [ ] 2.3.3 - Add subtle login prompt (non-blocking)
-- [ ] 2.3.4 - Navigate to /preview on successful upload
-- [ ] 2.3.5 - Register route in `app/routes.ts`
+#### Task 5.1: Create Stripe checkout endpoint
 
-**Files to modify/create:**
-- `app/routes/upload.tsx` - Upload page route
-- `app/routes.ts` - Add route registration
+- [ ] Install `stripe` and `@stripe/stripe-js` packages
+- [ ] Create `app/services/stripe.server.ts` with Stripe client initialization
+- [ ] Create `app/routes/api.stripe.checkout.ts` - POST endpoint to create checkout session
+- [ ] Validate user is authenticated before creating checkout
+- [ ] Include user ID in checkout session metadata for webhook
+- [ ] Configure success and cancel URLs
+- [ ] Run `npm run typecheck` and `npm run lint`
 
----
+#### Task 5.2: Create Stripe webhook handler
 
-##### Task 2.4: Create Preview Page Route
+- [ ] Create `app/routes/api.stripe.webhook.ts` - POST endpoint to receive Stripe events
+- [ ] Verify webhook signature with `STRIPE_WEBHOOK_SECRET`
+- [ ] Handle `checkout.session.completed` event
+- [ ] Extract user ID from session metadata
+- [ ] Call `grantPremium(userId, stripeCustomerId)` to update database
+- [ ] Handle idempotency (duplicate webhooks)
+- [ ] Run `npm run typecheck` and `npm run lint`
 
-**Objective:** Build the /preview page with device frame mockups.
-**Baby Step Checkpoint:** ✅ Tests | ✅ Lint | ✅ Types
+#### Task 5.3: Create checkout flow UI
 
-**Subtasks:**
-- [ ] 2.4.1 - Create `app/routes/preview.tsx` route module
-- [ ] 2.4.2 - Load image from sessionStorage, redirect to /upload if missing
-- [ ] 2.4.3 - Compose PreviewGrid with all device mockups
-- [ ] 2.4.4 - Add "Upload Different Image" button
-- [ ] 2.4.5 - Add "Continue to Download" CTA button
-- [ ] 2.4.6 - Register route in `app/routes.ts`
+- [ ] Update `PremiumPackageCard.tsx` to trigger checkout API on "Buy Premium" click
+- [ ] Add loading state while creating checkout session
+- [ ] Redirect to Stripe Checkout on success
+- [ ] Handle errors gracefully with user-friendly messages
+- [ ] Add i18n keys for checkout flow
+- [ ] Run `npm run typecheck` and `npm run lint`
 
-**Files to modify/create:**
-- `app/routes/preview.tsx` - Preview page route
-- `app/routes.ts` - Add route registration
+#### Task 5.4: Create success page
 
----
-
-### Phase 3: Download & Premium Upsell
-
-**Goal:** Build the download interface with free/premium tier differentiation.
-**Prerequisite:** Phase 2
-
-#### Tasks
-
-##### Task 3.1: Create Premium Status Service
-
-**Objective:** Service to check and manage user premium status.
-**Baby Step Checkpoint:** ✅ Tests | ✅ Lint | ✅ Types
-
-**Subtasks:**
-- [ ] 3.1.1 - Create `app/services/premium.server.ts`
-- [ ] 3.1.2 - Implement `getUserPremiumStatus(userId)` - fetch from DB
-- [ ] 3.1.3 - Implement `upgradeToPremium(userId, stripeCustomerId)` - update DB
-- [ ] 3.1.4 - Add proper error handling
-
-**Files to modify/create:**
-- `app/services/premium.server.ts` - Premium status service
+- [ ] Register `/success` route in `app/routes.ts`
+- [ ] Create `app/routes/success.tsx` - post-payment confirmation
+- [ ] Show "Welcome to Premium!" message
+- [ ] Explain lifetime access
+- [ ] Auto-redirect to `/download` after 3 seconds (or manual link)
+- [ ] Add i18n keys for success page
+- [ ] Run `npm run typecheck` and `npm run lint`
+- [ ] Write E2E test: mock Stripe webhook → user marked as premium → can download premium ZIP
+- [ ] Run `npm run test:e2e -- --retries=1` and verify tests pass
 
 ---
 
-##### Task 3.2: Create Premium Context
+### Phase 6: Premium Manifest Customization
 
-**Objective:** React context to share premium status across components.
-**Baby Step Checkpoint:** ✅ Tests | ✅ Lint | ✅ Types
+**🔴 Antes:** Premium ZIP genera manifest.json con valores por defecto.
+**🟢 Después:** Usuario premium puede personalizar app name, theme color, background color antes de descargar.
 
-**Subtasks:**
-- [ ] 3.2.1 - Create `app/components/PremiumContext.tsx`
-- [ ] 3.2.2 - Provide `isPremium` boolean and `isLoading` state
-- [ ] 3.2.3 - Fetch premium status on auth state change
-- [ ] 3.2.4 - Cache status in context to avoid repeated DB calls
+#### Task 6.1: Add manifest customization to download page
 
-**Files to modify/create:**
-- `app/components/PremiumContext.tsx` - Premium status context
-
----
-
-##### Task 3.3: Create Download Package Component
-
-**Objective:** Component showing package contents with free/premium differentiation.
-**Baby Step Checkpoint:** ✅ Tests | ✅ Lint | ✅ Types
-
-**Subtasks:**
-- [ ] 3.3.1 - Create `app/components/DownloadPackage.tsx`
-- [ ] 3.3.2 - Two-column layout: Free (left) vs Premium (right)
-- [ ] 3.3.3 - Show file tree for each package
-- [ ] 3.3.4 - Lock indicator on premium files for non-premium users
-- [ ] 3.3.5 - Download button for each tier
-
-**Files to modify/create:**
-- `app/components/DownloadPackage.tsx` - Download package display component
+- [ ] Create `app/components/ManifestCustomizer.tsx` - form for app name, colors
+- [ ] Add color pickers for theme_color and background_color
+- [ ] Add text input for app short_name and name
+- [ ] Only show customizer for premium users
+- [ ] Store customization in component state (not persisted)
+- [ ] Pass customization to ZIP generation
+- [ ] Add i18n keys for customizer
+- [ ] Run `npm run typecheck` and `npm run lint`
+- [ ] Write E2E test: premium user customizes manifest → ZIP contains customized values
+- [ ] Run `npm run test:e2e -- --retries=1` and verify tests pass
 
 ---
 
-##### Task 3.4: Create Manifest Customization Form
+### Phase 7: Contact Form & Email
 
-**Objective:** Form for premium users to customize manifest.json settings.
-**Baby Step Checkpoint:** ✅ Tests | ✅ Lint | ✅ Types
+**🔴 Antes:** No hay forma de contactar al equipo.
+**🟢 Después:** Página de contacto funcional con envío de emails via Resend.
 
-**Subtasks:**
-- [ ] 3.4.1 - Create `app/components/ManifestForm.tsx`
-- [ ] 3.4.2 - Add fields: App Name, Short Name, Theme Color, Background Color
-- [ ] 3.4.3 - Color picker for theme/background colors
-- [ ] 3.4.4 - Live preview of manifest.json output
-- [ ] 3.4.5 - Zod validation for all fields
+#### Task 7.1: Create contact form route and service
 
-**Files to modify/create:**
-- `app/components/ManifestForm.tsx` - Manifest customization form
-
----
-
-##### Task 3.5: Create Download Page Route
-
-**Objective:** Build the /download page with free/premium download options.
-**Baby Step Checkpoint:** ✅ Tests | ✅ Lint | ✅ Types
-
-**Subtasks:**
-- [ ] 3.5.1 - Create `app/routes/download.tsx` route module
-- [ ] 3.5.2 - Load image from sessionStorage, redirect to /upload if missing
-- [ ] 3.5.3 - Compose DownloadPackage component
-- [ ] 3.5.4 - Show ManifestForm for premium users only
-- [ ] 3.5.5 - Premium upsell section for non-premium users
-- [ ] 3.5.6 - Trigger ZIP generation and download on button click
-- [ ] 3.5.7 - Register route in `app/routes.ts`
-
-**Files to modify/create:**
-- `app/routes/download.tsx` - Download page route
-- `app/routes.ts` - Add route registration
+- [ ] Install `resend` package
+- [ ] Create `app/services/email.server.ts` with Resend client initialization
+- [ ] Create `sendContactEmail(from: string, subject: string, message: string): Promise<void>`
+- [ ] Register `/contact` route in `app/routes.ts`
+- [ ] Create `app/routes/contact.tsx` with form and action handler
+- [ ] Create `app/components/ContactForm.tsx` with name, email, message fields
+- [ ] Implement form validation with Zod
+- [ ] Show success toast on submission
+- [ ] Add i18n keys for contact form
+- [ ] Run `npm run typecheck` and `npm run lint`
+- [ ] Write E2E test: fill contact form → submit → success message shown
+- [ ] Run `npm run test:e2e -- --retries=1` and verify tests pass
 
 ---
 
-### Phase 4: Payment Integration (Stripe)
+### Phase 8: Legal Pages
 
-**Goal:** Implement Stripe Checkout for premium purchases with webhook handling.
-**Prerequisite:** Phase 3
+**🔴 Antes:** No hay páginas legales.
+**🟢 Después:** Terms of Service y Privacy Policy páginas disponibles.
 
-#### Tasks
+#### Task 8.1: Create Terms of Service page
 
-##### Task 4.1: Create Stripe Service
+- [ ] Register `/terms` route in `app/routes.ts`
+- [ ] Create `app/routes/terms.tsx` with static content
+- [ ] Add terms content (can be placeholder initially, user to provide final copy)
+- [ ] Add i18n keys for terms page (or keep English-only for legal docs)
+- [ ] Run `npm run typecheck` and `npm run lint`
 
-**Objective:** Server-side Stripe service for checkout session creation.
-**Baby Step Checkpoint:** ✅ Tests | ✅ Lint | ✅ Types
+#### Task 8.2: Create Privacy Policy page
 
-**Subtasks:**
-- [ ] 4.1.1 - Create `app/services/stripe.server.ts`
-- [ ] 4.1.2 - Implement `createCheckoutSession(userId, userEmail)` - returns Stripe session URL
-- [ ] 4.1.3 - Configure €5 one-time payment product
-- [ ] 4.1.4 - Set success/cancel URLs
-- [ ] 4.1.5 - Store customer ID in session metadata
-
-**Files to modify/create:**
-- `app/services/stripe.server.ts` - Stripe service
-
----
-
-##### Task 4.2: Create Checkout API Route
-
-**Objective:** API endpoint to create Stripe checkout session.
-**Baby Step Checkpoint:** ✅ Tests | ✅ Lint | ✅ Types
-
-**Subtasks:**
-- [ ] 4.2.1 - Create `app/routes/api.stripe.checkout.tsx` route
-- [ ] 4.2.2 - Require authentication (user must be logged in)
-- [ ] 4.2.3 - Call Stripe service to create session
-- [ ] 4.2.4 - Redirect to Stripe Checkout URL
-- [ ] 4.2.5 - Register route in `app/routes.ts`
-
-**Files to modify/create:**
-- `app/routes/api.stripe.checkout.tsx` - Checkout API route
-- `app/routes.ts` - Add route registration
+- [ ] Register `/privacy` route in `app/routes.ts`
+- [ ] Create `app/routes/privacy.tsx` with static content
+- [ ] Add privacy content (can be placeholder initially)
+- [ ] Add i18n keys for privacy page (or keep English-only)
+- [ ] Link to privacy/terms from footer
+- [ ] Run `npm run typecheck` and `npm run lint`
 
 ---
 
-##### Task 4.3: Create Stripe Webhook Handler
-
-**Objective:** Webhook endpoint to handle Stripe payment success events.
-**Baby Step Checkpoint:** ✅ Tests | ✅ Lint | ✅ Types
-
-**Subtasks:**
-- [ ] 4.3.1 - Create `app/routes/api.stripe.webhook.tsx` route
-- [ ] 4.3.2 - Verify Stripe webhook signature
-- [ ] 4.3.3 - Handle `checkout.session.completed` event
-- [ ] 4.3.4 - Extract user ID from session metadata
-- [ ] 4.3.5 - Call premium service to upgrade user
-- [ ] 4.3.6 - Handle idempotency (duplicate webhooks)
-- [ ] 4.3.7 - Register route in `app/routes.ts`
-
-**Files to modify/create:**
-- `app/routes/api.stripe.webhook.tsx` - Webhook handler route
-- `app/routes.ts` - Add route registration
-
----
-
-##### Task 4.4: Create Success Page Route
-
-**Objective:** Build the /success page shown after successful payment.
-**Baby Step Checkpoint:** ✅ Tests | ✅ Lint | ✅ Types
-
-**Subtasks:**
-- [ ] 4.4.1 - Create `app/routes/success.tsx` route module
-- [ ] 4.4.2 - Show "Welcome to Premium!" confirmation message
-- [ ] 4.4.3 - Explain lifetime access benefit
-- [ ] 4.4.4 - CTA to return to download page
-- [ ] 4.4.5 - Register route in `app/routes.ts`
-
-**Files to modify/create:**
-- `app/routes/success.tsx` - Success page route
-- `app/routes.ts` - Add route registration
-
----
-
-##### Task 4.5: Create Buy Premium Button Component
-
-**Objective:** Button component that initiates Stripe checkout flow.
-**Baby Step Checkpoint:** ✅ Tests | ✅ Lint | ✅ Types
-
-**Subtasks:**
-- [ ] 4.5.1 - Create `app/components/BuyPremiumButton.tsx`
-- [ ] 4.5.2 - If not logged in: show "Sign in to buy" variant
-- [ ] 4.5.3 - If logged in, not premium: show "Buy Premium - €5" variant
-- [ ] 4.5.4 - If premium: show disabled "Already Premium" state
-- [ ] 4.5.5 - Handle loading state during checkout redirect
-
-**Files to modify/create:**
-- `app/components/BuyPremiumButton.tsx` - Buy premium button component
-
----
-
-### Phase 5: Landing Page & Legal Pages
-
-**Goal:** Build the marketing landing page and required legal pages.
-**Prerequisite:** Phase 2 (uses upload CTA)
-
-#### Tasks
-
-##### Task 5.1: Create Landing Page Hero Section
-
-**Objective:** Build compelling hero section with clear value proposition.
-**Baby Step Checkpoint:** ✅ Tests | ✅ Lint | ✅ Types
-
-**Subtasks:**
-- [ ] 5.1.1 - Create `app/components/landing/FaviconHero.tsx`
-- [ ] 5.1.2 - Clear headline: "All your favicon formats in 10 seconds"
-- [ ] 5.1.3 - Subheadline explaining the problem solved
-- [ ] 5.1.4 - Primary CTA: "Upload your image"
-- [ ] 5.1.5 - Trust signals: "No account needed for free tier"
-
-**Files to modify/create:**
-- `app/components/landing/FaviconHero.tsx` - Hero section component
-
----
-
-##### Task 5.2: Create Features Section
-
-**Objective:** Section explaining what's included in free vs premium.
-**Baby Step Checkpoint:** ✅ Tests | ✅ Lint | ✅ Types
-
-**Subtasks:**
-- [ ] 5.2.1 - Create `app/components/landing/FeaturesSection.tsx`
-- [ ] 5.2.2 - List free formats with checkmarks
-- [ ] 5.2.3 - List premium formats with lock/unlock indicators
-- [ ] 5.2.4 - Visual comparison between tiers
-
-**Files to modify/create:**
-- `app/components/landing/FeaturesSection.tsx` - Features section component
-
----
-
-##### Task 5.3: Create How It Works Section
-
-**Objective:** Three-step visual guide to using the tool.
-**Baby Step Checkpoint:** ✅ Tests | ✅ Lint | ✅ Types
-
-**Subtasks:**
-- [ ] 5.3.1 - Create `app/components/landing/HowItWorks.tsx`
-- [ ] 5.3.2 - Step 1: Upload your logo
-- [ ] 5.3.3 - Step 2: Preview in all contexts
-- [ ] 5.3.4 - Step 3: Download your package
-
-**Files to modify/create:**
-- `app/components/landing/HowItWorks.tsx` - How it works section component
-
----
-
-##### Task 5.4: Update Landing Page Route
-
-**Objective:** Compose landing page with new sections.
-**Baby Step Checkpoint:** ✅ Tests | ✅ Lint | ✅ Types
-
-**Subtasks:**
-- [ ] 5.4.1 - Update `app/routes/home.tsx` with FaviconForge content
-- [ ] 5.4.2 - Compose FaviconHero, FeaturesSection, HowItWorks
-- [ ] 5.4.3 - Update Footer with FaviconForge branding
-- [ ] 5.4.4 - Add SEO meta tags (title, description, OG tags)
-
-**Files to modify/create:**
-- `app/routes/home.tsx` - Update landing page route
-
----
-
-##### Task 5.5: Create Terms of Service Page
-
-**Objective:** Build /terms page with terms of service content.
-**Baby Step Checkpoint:** ✅ Tests | ✅ Lint | ✅ Types
-
-**Subtasks:**
-- [ ] 5.5.1 - Create `app/routes/terms.tsx` route module
-- [ ] 5.5.2 - Add terms of service content (template)
-- [ ] 5.5.3 - Include sections: usage, payments, refunds, liability
-- [ ] 5.5.4 - Register route in `app/routes.ts`
-
-**Files to modify/create:**
-- `app/routes/terms.tsx` - Terms of service page route
-- `app/routes.ts` - Add route registration
-
----
-
-##### Task 5.6: Create Privacy Policy Page
-
-**Objective:** Build /privacy page with privacy policy content.
-**Baby Step Checkpoint:** ✅ Tests | ✅ Lint | ✅ Types
-
-**Subtasks:**
-- [ ] 5.6.1 - Create `app/routes/privacy.tsx` route module
-- [ ] 5.6.2 - Add privacy policy content (template)
-- [ ] 5.6.3 - Include sections: data collected, cookies, third parties, GDPR
-- [ ] 5.6.4 - Register route in `app/routes.ts`
-
-**Files to modify/create:**
-- `app/routes/privacy.tsx` - Privacy policy page route
-- `app/routes.ts` - Add route registration
-
----
-
-### Phase 6: Contact Form & Email
-
-**Goal:** Implement contact form with Resend email integration.
-**Prerequisite:** Phase 0 (dependencies)
-
-#### Tasks
-
-##### Task 6.1: Create Email Service
-
-**Objective:** Service to send emails via Resend API.
-**Baby Step Checkpoint:** ✅ Tests | ✅ Lint | ✅ Types
-
-**Subtasks:**
-- [ ] 6.1.1 - Create `app/services/email.server.ts`
-- [ ] 6.1.2 - Implement `sendContactEmail(name, email, message)` function
-- [ ] 6.1.3 - Configure Resend with API key from environment
-- [ ] 6.1.4 - Handle errors gracefully
-
-**Files to modify/create:**
-- `app/services/email.server.ts` - Email service
-
----
-
-##### Task 6.2: Create Contact Form Component
-
-**Objective:** Contact form with name, email, and message fields.
-**Baby Step Checkpoint:** ✅ Tests | ✅ Lint | ✅ Types
-
-**Subtasks:**
-- [ ] 6.2.1 - Create `app/components/ContactForm.tsx`
-- [ ] 6.2.2 - Add fields: Name, Email, Message
-- [ ] 6.2.3 - Zod validation for all fields
-- [ ] 6.2.4 - Loading and success states
-- [ ] 6.2.5 - Error handling with user-friendly messages
-
-**Files to modify/create:**
-- `app/components/ContactForm.tsx` - Contact form component
-
----
-
-##### Task 6.3: Create Contact Page Route
-
-**Objective:** Build /contact page with contact form.
-**Baby Step Checkpoint:** ✅ Tests | ✅ Lint | ✅ Types
-
-**Subtasks:**
-- [ ] 6.3.1 - Create `app/routes/contact.tsx` route module
-- [ ] 6.3.2 - Add action handler to process form submission
-- [ ] 6.3.3 - Call email service on successful validation
-- [ ] 6.3.4 - Show success message after email sent
-- [ ] 6.3.5 - Register route in `app/routes.ts`
-
-**Files to modify/create:**
-- `app/routes/contact.tsx` - Contact page route
-- `app/routes.ts` - Add route registration
-
----
-
-##### Task 6.4: Create Contact API Route
-
-**Objective:** API endpoint for contact form submission.
-**Baby Step Checkpoint:** ✅ Tests | ✅ Lint | ✅ Types
-
-**Subtasks:**
-- [ ] 6.4.1 - Create `app/routes/api.contact.tsx` route
-- [ ] 6.4.2 - Validate request body with Zod
-- [ ] 6.4.3 - Call email service
-- [ ] 6.4.4 - Return JSON response (success/error)
-- [ ] 6.4.5 - Register route in `app/routes.ts`
-
-**Files to modify/create:**
-- `app/routes/api.contact.tsx` - Contact API route
-- `app/routes.ts` - Add route registration
-
----
-
-### Phase 7: Analytics & Cookie Consent
-
-**Goal:** Implement GA4 tracking and GDPR-compliant cookie consent.
-**Prerequisite:** Phase 5 (pages exist to track)
-
-#### Tasks
-
-##### Task 7.1: Create Analytics Service
-
-**Objective:** Client-side service for GA4 event tracking.
-**Baby Step Checkpoint:** ✅ Tests | ✅ Lint | ✅ Types
-
-**Subtasks:**
-- [ ] 7.1.1 - Create `app/services/analytics.client.ts`
-- [ ] 7.1.2 - Initialize gtag with measurement ID from environment
-- [ ] 7.1.3 - Implement `trackEvent(name, params)` function
-- [ ] 7.1.4 - Implement all 13 events from PRD:
-  - `page_view`
-  - `file_upload_start`
-  - `file_upload_success`
-  - `file_upload_error`
-  - `preview_view`
-  - `download_free_click`
-  - `download_free_complete`
-  - `premium_interest`
-  - `login_start`
-  - `login_complete`
-  - `checkout_start`
-  - `checkout_complete`
-  - `download_premium_complete`
-  - `contact_form_submit`
-- [ ] 7.1.5 - Only track if user has consented to cookies
-
-**Files to modify/create:**
-- `app/services/analytics.client.ts` - Analytics service
-
----
-
-##### Task 7.2: Create Cookie Consent Banner
-
-**Objective:** GDPR-compliant cookie consent banner.
-**Baby Step Checkpoint:** ✅ Tests | ✅ Lint | ✅ Types
-
-**Subtasks:**
-- [ ] 7.2.1 - Create `app/components/CookieConsent.tsx`
-- [ ] 7.2.2 - Show banner if consent not given
-- [ ] 7.2.3 - "Accept" and "Decline" buttons
-- [ ] 7.2.4 - Store consent in cookie (1 year expiry)
-- [ ] 7.2.5 - Link to privacy policy
-
-**Files to modify/create:**
-- `app/components/CookieConsent.tsx` - Cookie consent banner component
-
----
-
-##### Task 7.3: Integrate Analytics Throughout App
-
-**Objective:** Add analytics tracking calls to all relevant user actions.
-**Baby Step Checkpoint:** ✅ Tests | ✅ Lint | ✅ Types
-
-**Subtasks:**
-- [ ] 7.3.1 - Add GA4 script to `app/root.tsx`
-- [ ] 7.3.2 - Track page views on route changes
-- [ ] 7.3.3 - Add tracking to upload flow
-- [ ] 7.3.4 - Add tracking to preview page
-- [ ] 7.3.5 - Add tracking to download actions
-- [ ] 7.3.6 - Add tracking to login/signup
-- [ ] 7.3.7 - Add tracking to checkout flow
-- [ ] 7.3.8 - Add tracking to contact form
-
-**Files to modify/create:**
-- `app/root.tsx` - Add GA4 script and page view tracking
-- Various route/component files - Add event tracking
-
----
-
-### Phase 8: Internationalization
-
-**Goal:** Add all translation keys for FaviconForge UI.
-**Prerequisite:** Phases 2-6 (UI exists)
-
-#### Tasks
-
-##### Task 8.1: Add Landing Page Translations
-
-**Objective:** Translation keys for landing page content.
-**Baby Step Checkpoint:** ✅ Tests | ✅ Lint | ✅ Types
-
-**Subtasks:**
-- [ ] 8.1.1 - Add hero section keys (title, subtitle, cta)
-- [ ] 8.1.2 - Add features section keys
-- [ ] 8.1.3 - Add how it works section keys
-- [ ] 8.1.4 - Add footer keys
-
-**Files to modify/create:**
-- `app/locales/en.json` - English translations
-- `app/locales/es.json` - Spanish translations
-
----
-
-##### Task 8.2: Add Upload/Preview/Download Translations
-
-**Objective:** Translation keys for core app flow.
-**Baby Step Checkpoint:** ✅ Tests | ✅ Lint | ✅ Types
-
-**Subtasks:**
-- [ ] 8.2.1 - Add upload page keys (instructions, errors, validation messages)
-- [ ] 8.2.2 - Add preview page keys
-- [ ] 8.2.3 - Add download page keys
-- [ ] 8.2.4 - Add premium upsell keys
-- [ ] 8.2.5 - Add manifest form keys
-
-**Files to modify/create:**
-- `app/locales/en.json` - English translations
-- `app/locales/es.json` - Spanish translations
-
----
-
-##### Task 8.3: Add Legal & Error Translations
-
-**Objective:** Translation keys for legal pages and error messages.
-**Baby Step Checkpoint:** ✅ Tests | ✅ Lint | ✅ Types
-
-**Subtasks:**
-- [ ] 8.3.1 - Add terms page keys
-- [ ] 8.3.2 - Add privacy page keys
-- [ ] 8.3.3 - Add contact page keys
-- [ ] 8.3.4 - Add all error message keys from PRD
-
-**Files to modify/create:**
-- `app/locales/en.json` - English translations
-- `app/locales/es.json` - Spanish translations
-
----
-
-### Phase 9: E2E Testing
-
-**Goal:** Comprehensive E2E test coverage for all critical paths.
-**Prerequisite:** Phases 1-7 (features complete)
-
-#### Tasks
-
-##### Task 9.1: Free Flow E2E Tests
-
-**Objective:** Test complete free user flow (anonymous).
-**Baby Step Checkpoint:** ✅ Tests | ✅ Lint | ✅ Types
-
-**Subtasks:**
-- [ ] 9.1.1 - Create `tests/e2e/favicon-free-flow.spec.ts`
-- [ ] 9.1.2 - Test: Upload valid image → Preview renders → Download free ZIP
-- [ ] 9.1.3 - Test: Verify free ZIP contents (web/ folder files)
-- [ ] 9.1.4 - Add test fixtures for valid images (512x512 PNG)
-
-**Files to modify/create:**
-- `tests/e2e/favicon-free-flow.spec.ts` - Free flow tests
-- `tests/fixtures/images/` - Test image fixtures
-
----
-
-##### Task 9.2: Validation Error E2E Tests
-
-**Objective:** Test all image validation error scenarios.
-**Baby Step Checkpoint:** ✅ Tests | ✅ Lint | ✅ Types
-
-**Subtasks:**
-- [ ] 9.2.1 - Create `tests/e2e/favicon-validation.spec.ts`
-- [ ] 9.2.2 - Test: Upload too small image → Error displayed
-- [ ] 9.2.3 - Test: Upload non-square image → Error displayed
-- [ ] 9.2.4 - Test: Upload invalid format → Error displayed
-- [ ] 9.2.5 - Test: Upload oversized file → Error displayed
-- [ ] 9.2.6 - Add test fixtures for invalid images
-
-**Files to modify/create:**
-- `tests/e2e/favicon-validation.spec.ts` - Validation tests
-- `tests/fixtures/images/` - Invalid test image fixtures
-
----
-
-##### Task 9.3: Premium Purchase Flow E2E Tests
-
-**Objective:** Test premium purchase flow with mocked Stripe.
-**Baby Step Checkpoint:** ✅ Tests | ✅ Lint | ✅ Types
-
-**Subtasks:**
-- [ ] 9.3.1 - Create `tests/e2e/favicon-premium-flow.spec.ts`
-- [ ] 9.3.2 - Test: Login → Upload → Click "Buy Premium" → Mock Stripe success webhook → Verify DB updated
-- [ ] 9.3.3 - Test: Premium user can download premium ZIP
-- [ ] 9.3.4 - Test: Premium status persists across sessions
-- [ ] 9.3.5 - Create mock Stripe webhook helper
-
-**Files to modify/create:**
-- `tests/e2e/favicon-premium-flow.spec.ts` - Premium flow tests
-- `tests/helpers/stripe-mock.ts` - Stripe mock helpers
-
----
-
-##### Task 9.4: Edge Case E2E Tests
-
-**Objective:** Test edge cases and error recovery.
-**Baby Step Checkpoint:** ✅ Tests | ✅ Lint | ✅ Types
-
-**Subtasks:**
-- [ ] 9.4.1 - Create `tests/e2e/favicon-edge-cases.spec.ts`
-- [ ] 9.4.2 - Test: Refresh on preview page → State preserved from sessionStorage
-- [ ] 9.4.3 - Test: Direct navigation to /preview without upload → Redirect to /upload
-- [ ] 9.4.4 - Test: Direct navigation to /download without upload → Redirect to /upload
-- [ ] 9.4.5 - Test: Try premium download without login → Login prompt shown
-
-**Files to modify/create:**
-- `tests/e2e/favicon-edge-cases.spec.ts` - Edge case tests
+### Phase 9: Google Analytics Integration
+
+**🔴 Antes:** No hay tracking de eventos ni métricas.
+**🟢 Después:** GA4 configurado con eventos según PRD (page views, uploads, downloads, payments).
+
+#### Task 9.1: Set up GA4 tracking
+
+- [ ] Add GA4 script to `app/root.tsx` (conditionally load based on env)
+- [ ] Create `app/lib/analytics.ts` with `trackEvent(name: string, params?: object)` helper
+- [ ] Implement page view tracking on route changes
+- [ ] Run `npm run typecheck` and `npm run lint`
+
+#### Task 9.2: Add event tracking throughout app
+
+- [ ] Track `file_upload_start` on file selection
+- [ ] Track `file_upload_success` on valid upload
+- [ ] Track `file_upload_error` on validation failure
+- [ ] Track `preview_view` on preview page load
+- [ ] Track `download_free_click` and `download_free_complete`
+- [ ] Track `premium_interest` when premium section is viewed
+- [ ] Track `login_start` and `login_complete`
+- [ ] Track `checkout_start` and `checkout_complete`
+- [ ] Track `download_premium_complete`
+- [ ] Track `contact_form_submit`
+- [ ] Run `npm run typecheck` and `npm run lint`
 
 ---
 
 ### Phase 10: Polish & Accessibility
 
-**Goal:** Final polish, responsive design, and accessibility compliance.
-**Prerequisite:** Phases 1-8 (features complete)
+**🔴 Antes:** Funcionalidad completa pero sin pulir.
+**🟢 Después:** WCAG 2.1 AA compliant, responsive en mobile, manejo de errores robusto.
 
-#### Tasks
+#### Task 10.1: Accessibility audit and fixes
 
-##### Task 10.1: Responsive Design Review
+- [ ] Add proper ARIA labels to all interactive elements
+- [ ] Ensure keyboard navigation works throughout the app
+- [ ] Add focus indicators to all focusable elements
+- [ ] Test with screen reader (VoiceOver)
+- [ ] Ensure color contrast meets WCAG AA standards
+- [ ] Run `npm run typecheck` and `npm run lint`
 
-**Objective:** Ensure all pages work on mobile, tablet, and desktop.
-**Baby Step Checkpoint:** ✅ Tests | ✅ Lint | ✅ Types
+#### Task 10.2: Mobile responsive polish
 
-**Subtasks:**
-- [ ] 10.1.1 - Test and fix landing page responsiveness
-- [ ] 10.1.2 - Test and fix upload page responsiveness
-- [ ] 10.1.3 - Test and fix preview page (swipeable previews on mobile)
-- [ ] 10.1.4 - Test and fix download page two-column layout
-- [ ] 10.1.5 - Fix any horizontal scroll issues (see KNOWN_ISSUES.md)
+- [ ] Test all pages on mobile viewports (320-400px)
+- [ ] Ensure preview grid collapses to single column on mobile
+- [ ] Test drag-and-drop on touch devices (fallback to tap)
+- [ ] Ensure buttons and touch targets are 44x44px minimum
+- [ ] Run `npm run typecheck` and `npm run lint`
 
-**Files to modify/create:**
-- Various component files - Responsive fixes
+#### Task 10.3: Error handling polish
 
----
-
-##### Task 10.2: Accessibility Audit
-
-**Objective:** WCAG 2.1 AA compliance for all pages.
-**Baby Step Checkpoint:** ✅ Tests | ✅ Lint | ✅ Types
-
-**Subtasks:**
-- [ ] 10.2.1 - Add ARIA labels to all interactive elements
-- [ ] 10.2.2 - Ensure keyboard navigation works for all flows
-- [ ] 10.2.3 - Verify color contrast meets WCAG AA
-- [ ] 10.2.4 - Add skip links for main content
-- [ ] 10.2.5 - Test with screen reader
-
-**Files to modify/create:**
-- Various component files - Accessibility fixes
-
----
-
-##### Task 10.3: SEO Optimization
-
-**Objective:** Optimize pages for search engines.
-**Baby Step Checkpoint:** ✅ Tests | ✅ Lint | ✅ Types
-
-**Subtasks:**
-- [ ] 10.3.1 - Add meta tags to all pages (title, description, robots)
-- [ ] 10.3.2 - Add Open Graph tags for social sharing
-- [ ] 10.3.3 - Add structured data (JSON-LD) for SoftwareApplication
-- [ ] 10.3.4 - Create sitemap.xml
-- [ ] 10.3.5 - Create robots.txt
-
-**Files to modify/create:**
-- Various route files - Meta tags
-- `public/sitemap.xml` - Sitemap
-- `public/robots.txt` - Robots file
-
----
-
-##### Task 10.4: Update Header for FaviconForge
-
-**Objective:** Update header component with FaviconForge branding and navigation.
-**Baby Step Checkpoint:** ✅ Tests | ✅ Lint | ✅ Types
-
-**Subtasks:**
-- [ ] 10.4.1 - Update logo/brand name to "FaviconForge"
-- [ ] 10.4.2 - Add premium badge next to avatar for premium users
-- [ ] 10.4.3 - Ensure navigation links are correct
-
-**Files to modify/create:**
-- `app/components/Header.tsx` - Update header
+- [ ] Ensure all error states have user-friendly messages
+- [ ] Add fallback UI for processing errors
+- [ ] Test network error scenarios
+- [ ] Verify error messages are translated
+- [ ] Run `npm run typecheck` and `npm run lint`
+- [ ] Run full E2E test suite: `npm run test:e2e -- --retries=1`
 
 ---
 
@@ -929,129 +382,90 @@ FaviconForge is a freemium web application that generates all required favicon f
 
 Sequential list of all tasks in recommended order:
 
-1. Task 0.1 - Extend User Schema for Premium
-2. Task 0.2 - Install Required Dependencies
-3. Task 0.3 - Add Environment Variables Documentation
-4. Task 1.1 - Create Image Validation Service
-5. Task 1.2 - Create Canvas Resizing Service
-6. Task 1.3 - Create ICO Generation Service
-7. Task 1.4 - Create Manifest Generator Service
-8. Task 1.5 - Create ZIP Packaging Service
-9. Task 1.6 - Create Favicon Generation Orchestrator Hook
-10. Task 2.1 - Create Image Upload Component
-11. Task 2.2 - Create Device Frame Preview Components
-12. Task 2.3 - Create Upload Page Route
-13. Task 2.4 - Create Preview Page Route
-14. Task 3.1 - Create Premium Status Service
-15. Task 3.2 - Create Premium Context
-16. Task 3.3 - Create Download Package Component
-17. Task 3.4 - Create Manifest Customization Form
-18. Task 3.5 - Create Download Page Route
-19. Task 4.1 - Create Stripe Service
-20. Task 4.2 - Create Checkout API Route
-21. Task 4.3 - Create Stripe Webhook Handler
-22. Task 4.4 - Create Success Page Route
-23. Task 4.5 - Create Buy Premium Button Component
-24. Task 5.1 - Create Landing Page Hero Section
-25. Task 5.2 - Create Features Section
-26. Task 5.3 - Create How It Works Section
-27. Task 5.4 - Update Landing Page Route
-28. Task 5.5 - Create Terms of Service Page
-29. Task 5.6 - Create Privacy Policy Page
-30. Task 6.1 - Create Email Service
-31. Task 6.2 - Create Contact Form Component
-32. Task 6.3 - Create Contact Page Route
-33. Task 6.4 - Create Contact API Route
-34. Task 7.1 - Create Analytics Service
-35. Task 7.2 - Create Cookie Consent Banner
-36. Task 7.3 - Integrate Analytics Throughout App
-37. Task 8.1 - Add Landing Page Translations
-38. Task 8.2 - Add Upload/Preview/Download Translations
-39. Task 8.3 - Add Legal & Error Translations
-40. Task 9.1 - Free Flow E2E Tests
-41. Task 9.2 - Validation Error E2E Tests
-42. Task 9.3 - Premium Purchase Flow E2E Tests
-43. Task 9.4 - Edge Case E2E Tests
-44. Task 10.1 - Responsive Design Review
-45. Task 10.2 - Accessibility Audit
-46. Task 10.3 - SEO Optimization
-47. Task 10.4 - Update Header for FaviconForge
+1. Task 0.1 - Add premium fields to database schema
+2. Task 0.2 - Create premium status helpers
+3. Task 1.1 - Create image validation service
+4. Task 1.2 - Create upload route and component
+5. Task 1.3 - Update landing page for FaviconForge
+6. Task 2.1 - Install favicon generation dependencies
+7. Task 2.2 - Create favicon generation service
+8. Task 2.3 - Create preview route and components
+9. Task 3.1 - Create ZIP generation service
+10. Task 3.2 - Create download route and component
+11. Task 4.1 - Configure Google-only authentication
+12. Task 4.2 - Integrate premium status with auth
+13. Task 5.1 - Create Stripe checkout endpoint
+14. Task 5.2 - Create Stripe webhook handler
+15. Task 5.3 - Create checkout flow UI
+16. Task 5.4 - Create success page
+17. Task 6.1 - Add manifest customization to download page
+18. Task 7.1 - Create contact form route and service
+19. Task 8.1 - Create Terms of Service page
+20. Task 8.2 - Create Privacy Policy page
+21. Task 9.1 - Set up GA4 tracking
+22. Task 9.2 - Add event tracking throughout app
+23. Task 10.1 - Accessibility audit and fixes
+24. Task 10.2 - Mobile responsive polish
+25. Task 10.3 - Error handling polish
 
 ---
 
 ## Risk Mitigation
 
-| Risk | Impact | Mitigation |
-|------|--------|------------|
-| png-to-ico library compatibility issues | Medium | Test early in Phase 1; have fallback to generate individual PNGs only |
-| Large images crash browser during processing | High | Enforce 10MB limit strictly; show processing indicator; use web workers if needed |
-| Stripe webhook reliability | Medium | Implement idempotency; add retry logic; manual premium upgrade fallback |
-| sessionStorage limits for large images | Medium | Compress base64 data; consider IndexedDB as fallback |
-| Browser Canvas API differences | Low | Test on Chrome, Safari, Firefox; use feature detection |
-| OAuth limitations for testing | Low | Document manual testing required; mock where possible |
+| Risk                             | Impact                 | Mitigation                                                                           |
+| -------------------------------- | ---------------------- | ------------------------------------------------------------------------------------ |
+| Users bypass premium paywall     | Low revenue            | Accept risk; €5 not worth sophisticated protection. Client-side check is sufficient. |
+| png-to-ico library compatibility | Broken ICO files       | Test extensively across browsers. Have fallback messaging.                           |
+| Large images crash browser       | Poor UX                | 10MB limit, processing indicator, try-catch for Canvas errors.                       |
+| Stripe webhook delivery issues   | Missing premium grants | Implement retry logic, monitor webhook logs, manual recovery process.                |
+| Google OAuth downtime            | Can't purchase         | Show clear error, suggest trying later. Premium not required for free tier.          |
+| SessionStorage limits            | Lost upload            | Base64 images can be large. Consider chunking or warn if approaching limit.          |
 
 ---
 
 ## Open Questions
 
 - [ ] Final domain name for FaviconForge
-- [ ] Hosting provider decision (Vercel/Railway/other)
-- [ ] GA4 property ID (to be created during implementation)
-- [ ] Legal content review (Terms of Service, Privacy Policy templates need legal review)
-- [ ] Refund policy for edge cases (manual handling acceptable at €5 price point)
+- [ ] Hosting decision (Vercel vs Railway vs other)
+- [ ] Final copy for Terms of Service and Privacy Policy
+- [ ] Refund policy details (suggested: manual review, case by case)
+- [ ] Support email address for contact form
 
 ---
 
 ## Progress Tracker
 
-| Phase | Task | Status | Notes |
-|-------|------|--------|-------|
-| 0 | 0.1 | ⬜ Not Started | |
-| 0 | 0.2 | ⬜ Not Started | |
-| 0 | 0.3 | ⬜ Not Started | |
-| 1 | 1.1 | ⬜ Not Started | |
-| 1 | 1.2 | ⬜ Not Started | |
-| 1 | 1.3 | ⬜ Not Started | |
-| 1 | 1.4 | ⬜ Not Started | |
-| 1 | 1.5 | ⬜ Not Started | |
-| 1 | 1.6 | ⬜ Not Started | |
-| 2 | 2.1 | ⬜ Not Started | |
-| 2 | 2.2 | ⬜ Not Started | |
-| 2 | 2.3 | ⬜ Not Started | |
-| 2 | 2.4 | ⬜ Not Started | |
-| 3 | 3.1 | ⬜ Not Started | |
-| 3 | 3.2 | ⬜ Not Started | |
-| 3 | 3.3 | ⬜ Not Started | |
-| 3 | 3.4 | ⬜ Not Started | |
-| 3 | 3.5 | ⬜ Not Started | |
-| 4 | 4.1 | ⬜ Not Started | |
-| 4 | 4.2 | ⬜ Not Started | |
-| 4 | 4.3 | ⬜ Not Started | |
-| 4 | 4.4 | ⬜ Not Started | |
-| 4 | 4.5 | ⬜ Not Started | |
-| 5 | 5.1 | ⬜ Not Started | |
-| 5 | 5.2 | ⬜ Not Started | |
-| 5 | 5.3 | ⬜ Not Started | |
-| 5 | 5.4 | ⬜ Not Started | |
-| 5 | 5.5 | ⬜ Not Started | |
-| 5 | 5.6 | ⬜ Not Started | |
-| 6 | 6.1 | ⬜ Not Started | |
-| 6 | 6.2 | ⬜ Not Started | |
-| 6 | 6.3 | ⬜ Not Started | |
-| 6 | 6.4 | ⬜ Not Started | |
-| 7 | 7.1 | ⬜ Not Started | |
-| 7 | 7.2 | ⬜ Not Started | |
-| 7 | 7.3 | ⬜ Not Started | |
-| 8 | 8.1 | ⬜ Not Started | |
-| 8 | 8.2 | ⬜ Not Started | |
-| 8 | 8.3 | ⬜ Not Started | |
-| 9 | 9.1 | ⬜ Not Started | |
-| 9 | 9.2 | ⬜ Not Started | |
-| 9 | 9.3 | ⬜ Not Started | |
-| 9 | 9.4 | ⬜ Not Started | |
-| 10 | 10.1 | ⬜ Not Started | |
-| 10 | 10.2 | ⬜ Not Started | |
-| 10 | 10.3 | ⬜ Not Started | |
-| 10 | 10.4 | ⬜ Not Started | |
+| Phase | Task | Status         | Notes               |
+| ----- | ---- | -------------- | ------------------- |
+| 0     | 0.1  | ⬜ Not Started | Database schema     |
+| 0     | 0.2  | ⬜ Not Started | Premium helpers     |
+| 1     | 1.1  | ⬜ Not Started | Image validation    |
+| 1     | 1.2  | ⬜ Not Started | Upload route        |
+| 1     | 1.3  | ⬜ Not Started | Landing page        |
+| 2     | 2.1  | ⬜ Not Started | Dependencies        |
+| 2     | 2.2  | ⬜ Not Started | Favicon service     |
+| 2     | 2.3  | ⬜ Not Started | Preview route       |
+| 3     | 3.1  | ⬜ Not Started | ZIP service         |
+| 3     | 3.2  | ⬜ Not Started | Download route      |
+| 4     | 4.1  | ⬜ Not Started | Google-only auth    |
+| 4     | 4.2  | ⬜ Not Started | Premium integration |
+| 5     | 5.1  | ⬜ Not Started | Stripe checkout     |
+| 5     | 5.2  | ⬜ Not Started | Stripe webhook      |
+| 5     | 5.3  | ⬜ Not Started | Checkout UI         |
+| 5     | 5.4  | ⬜ Not Started | Success page        |
+| 6     | 6.1  | ⬜ Not Started | Manifest customizer |
+| 7     | 7.1  | ⬜ Not Started | Contact form        |
+| 8     | 8.1  | ⬜ Not Started | Terms page          |
+| 8     | 8.2  | ⬜ Not Started | Privacy page        |
+| 9     | 9.1  | ⬜ Not Started | GA4 setup           |
+| 9     | 9.2  | ⬜ Not Started | Event tracking      |
+| 10    | 10.1 | ⬜ Not Started | Accessibility       |
+| 10    | 10.2 | ⬜ Not Started | Mobile polish       |
+| 10    | 10.3 | ⬜ Not Started | Error handling      |
 
 **Status Legend:** ⬜ Not Started | 🔄 In Progress | ✅ Complete | ⏸️ Blocked
+
+---
+
+_Document created: 2025-12-31_
+_Based on PRD v1.0_
