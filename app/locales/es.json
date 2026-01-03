@@ -51,5 +51,26 @@
   "image_file_too_large": "El archivo es demasiado grande. Tamaño máximo: {{maxSizeMB}}MB",
   "image_too_small": "La imagen es demasiado pequeña. Tamaño mínimo: {{minSize}}x{{minSize}} píxeles",
   "image_not_square": "La imagen debe ser cuadrada (mismo ancho y alto)",
-  "image_load_error": "Error al cargar la imagen. Por favor, intenta con otro archivo."
+  "image_load_error": "Error al cargar la imagen. Por favor, intenta con otro archivo.",
+
+  "upload_title_line1": "Sube Tu",
+  "upload_title_line2": "Imagen",
+  "upload_subtitle": "Solo imagenes cuadradas. Minimo 512x512px. Max 10MB.",
+  "upload_drag_drop": "ARRASTRA Y SUELTA",
+  "upload_drop_here": "SUELTALA AQUI!",
+  "upload_or_click": "o haz clic para explorar",
+  "upload_browse_files": "Explorar Archivos",
+  "upload_validating": "Validando...",
+  "upload_success": "ARCHIVO SUBIDO!",
+  "upload_choose_different": "Elegir Otro",
+  "upload_continue": "Continuar",
+  "upload_try_again": "Intentar de Nuevo",
+  "upload_error_title": "ERROR",
+  "upload_accepted_formats": "Formatos aceptados:",
+  "upload_formats_list": "PNG • JPEG • WebP • SVG",
+  "upload_requirements_title": "Requisitos de Imagen:",
+  "upload_req_square": "Relacion de aspecto cuadrada (1:1)",
+  "upload_req_min_size": "Minimo 512×512 pixeles",
+  "upload_req_max_file": "Tamano maximo 10MB",
+  "upload_req_format": "Formato PNG, JPEG, WebP o SVG"
 }

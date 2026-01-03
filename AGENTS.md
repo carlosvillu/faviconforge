@@ -69,6 +69,11 @@ If the user explicitly names a doc file, the agent MUST read it before answering
   - Read and follow **`docs/DATABASE.md`**.
   - Apply its rules to all subsequent DB-related steps in that task.
 
+- **UI/UX-related tasks:** Before planning or implementing anything involving UI components, pages, layouts, styling, or visual design, the agent **MUST**:
+  - Read and follow **`docs/FRONTEND_DESIGN.md`** for design thinking and aesthetic guidelines.
+  - Read and follow **`docs/STYLE_GUIDE.md`** for brutalist design system, color palette, typography, and component patterns.
+  - Apply these design principles to all subsequent UI-related steps in that task.
+
 - **Planning + other domains:** When the user asks to plan a task that touches database, deployment, testing or any other documented area, the agent **MUST**, after understanding the task, read all relevant docs (e.g. **`docs/DATABASE.md`**, **`docs/DEPLOYMENT.md`**, **`docs/TESTING.md`**) **before** generating the plan.
 
 - **General rule:** Whenever a doc is referenced in this file or explicitly mentioned by the user, the agent **MUST read it before acting on that topic**.
@@ -120,14 +125,18 @@ If the user explicitly names a doc file, the agent MUST read it before answering
 
 ### Testing
 
-- **Web app:** E2E only (Playwright), always run with `--retries=1`
-- **Never complete a task without green tests**
+- **E2E Tests (Playwright):** For server-side features, routes, and integration testing - always run with `--retries=1`
+- **Unit Tests (Vitest):** For client-side services (image validation, favicon generation, etc.)
+- **CRITICAL:** Never complete a task without ALL tests green (both E2E and unit tests if applicable)
 
 ### Definition of Done
 
 #### Web App Tasks
 
-1. `npm run test:e2e` passes
+1. **ALL relevant tests pass:**
+   - `npm run test:e2e -- --retries=1` (if task has E2E tests)
+   - `npm run test:unit` (if task has unit tests)
+   - A task is NOT complete if any test fails
 2. `npm run typecheck` passes
 3. `npm run lint` passes
 4. README.md updated if needed

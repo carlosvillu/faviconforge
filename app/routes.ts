@@ -7,4 +7,5 @@ export default [
   route('api/__test__/premium', 'routes/api.__test__.premium.tsx'),
   route('auth/signup', 'routes/auth.signup.tsx'),
   route('auth/login', 'routes/auth.login.tsx'),
+  route('upload', 'routes/upload.tsx'),
 ] satisfies RouteConfig

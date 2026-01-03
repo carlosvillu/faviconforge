@@ -68,29 +68,29 @@ Antes de empezar, necesitas tener configurado:
 
 #### Task 1.1: Create image validation service
 
-- [ ] Setup Vitest for unit testing (install vitest, @vitest/coverage-v8, jsdom; create vitest.config.ts; add npm scripts)
-- [ ] Create `app/services/imageValidation.ts` with validation functions
-- [ ] Implement `validateImageFile(file: File): ValidationResult` - checks format (PNG/JPEG/WebP)
-- [ ] Implement `validateImageDimensions(img: HTMLImageElement): ValidationResult` - checks 512x512 min, square
-- [ ] Implement `validateFileSize(file: File): ValidationResult` - checks max 10MB
-- [ ] Add i18n keys for all validation error messages (en.json and es.json)
-- [ ] Write unit tests in `tests/unit/imageValidation.test.ts`
-- [ ] Run `npm run test:unit` and verify tests pass
-- [ ] Run `npm run typecheck` and `npm run lint`
+- [x] Setup Vitest for unit testing (install vitest, @vitest/coverage-v8, jsdom; create vitest.config.ts; add npm scripts)
+- [x] Create `app/services/imageValidation.ts` with validation functions
+- [x] Implement `validateImageFile(file: File): ValidationResult` - checks format (PNG/JPEG/WebP)
+- [x] Implement `validateImageDimensions(img: HTMLImageElement): ValidationResult` - checks 512x512 min, square
+- [x] Implement `validateFileSize(file: File): ValidationResult` - checks max 10MB
+- [x] Add i18n keys for all validation error messages (en.json and es.json)
+- [x] Write unit tests in `tests/unit/imageValidation.test.ts`
+- [x] Run `npm run test:unit` and verify tests pass
+- [x] Run `npm run typecheck` and `npm run lint`
 
 #### Task 1.2: Create upload route and component
 
-- [ ] Register `/upload` route in `app/routes.ts`
-- [ ] Create `app/routes/upload.tsx` with loader (no auth required)
-- [ ] Create `app/components/ImageUploader.tsx` with drag-and-drop zone
-- [ ] Create `app/hooks/useImageUpload.ts` to handle file selection, validation, preview
-- [ ] Store validated image as base64 in sessionStorage
-- [ ] Redirect to `/preview` on successful upload
-- [ ] Add i18n keys for upload UI (title, drop zone text, requirements)
-- [ ] Run `npm run typecheck` and `npm run lint`
-- [ ] Write E2E test: upload valid image → redirects to preview
-- [ ] Write E2E test: upload invalid image → shows error message
-- [ ] Run `npm run test:e2e -- --retries=1` and verify tests pass
+- [x] Register `/upload` route in `app/routes.ts`
+- [x] Create `app/routes/upload.tsx` with loader (no auth required)
+- [x] Create upload components with drag-and-drop zone (UploadDropzone, state components)
+- [x] Create `app/hooks/useImageUpload.ts` to handle file selection, validation, preview
+- [x] Store validated image as base64 in sessionStorage
+- [x] Redirect to `/preview` on successful upload
+- [x] Add i18n keys for upload UI (title, drop zone text, requirements)
+- [x] Run `npm run typecheck` and `npm run lint`
+- [x] Write E2E test: upload valid image → redirects to preview
+- [x] Write E2E test: upload invalid image → shows error message
+- [x] Run `npm run test:e2e -- --retries=1` and verify tests pass
 
 #### Task 1.3: Update landing page for FaviconForge
 
