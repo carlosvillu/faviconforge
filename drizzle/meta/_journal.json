@@ -8,6 +8,13 @@
       "when": 1767144602048,
       "tag": "0000_red_the_executioner",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1767198715695,
+      "tag": "0001_amused_red_hulk",
+      "breakpoints": true
     }
   ]
 }
