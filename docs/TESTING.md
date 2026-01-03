@@ -1,10 +1,91 @@
 # Testing Guide
 
-This project uses **Playwright E2E tests** with TestContainers for database isolation.
+This project uses **Playwright E2E tests** with TestContainers for database isolation, and **Vitest** for unit testing client-side services.
 
 | Framework | Location | Command |
 |-----------|----------|---------|
 | Playwright E2E | `tests/e2e/` | `npm run test:e2e` |
+| Vitest Unit | `tests/unit/` | `npm run test:unit` |
+
+---
+
+## Testing Strategy by Service Type
+
+| Service Type | Location | Test Approach |
+|--------------|----------|---------------|
+| Server-side (DB) | `app/services/*.server.ts` | E2E via test endpoints (`/api/__test__/*`) |
+| Client-side | `app/services/*.ts` (no `.server`) | Unit tests with Vitest |
+
+### Decision Tree
+
+```
+Is the service server-side (uses DB, runs on server)?
+├── YES → Create test endpoint + E2E tests (see "Testing Services via E2E")
+└── NO → Create unit tests with Vitest (see "Testing Client-Side Services")
+```
+
+---
+
+## Testing Client-Side Services (Vitest)
+
+Client-side services (image validation, favicon generation, ZIP creation) must be tested with **Vitest unit tests**.
+
+### Directory Structure
+
+```
+tests/
+├── e2e/                    # Playwright E2E tests
+│   └── *.spec.ts
+└── unit/                   # Vitest unit tests
+    ├── imageValidation.test.ts
+    ├── faviconGeneration.test.ts
+    └── zipGeneration.test.ts
+```
+
+### Example: Testing Image Validation Service
+
+**File:** `tests/unit/imageValidation.test.ts`
+
+```typescript
+import { describe, it, expect } from 'vitest'
+import { validateImageFile, validateFileSize } from '~/services/imageValidation'
+
+describe('validateImageFile', () => {
+  it('accepts PNG files', () => {
+    const file = new File([''], 'test.png', { type: 'image/png' })
+    const result = validateImageFile(file)
+    expect(result.valid).toBe(true)
+  })
+
+  it('rejects GIF files', () => {
+    const file = new File([''], 'test.gif', { type: 'image/gif' })
+    const result = validateImageFile(file)
+    expect(result.valid).toBe(false)
+    expect(result.error).toBeDefined()
+  })
+})
+
+describe('validateFileSize', () => {
+  it('accepts files under 10MB', () => {
+    const file = new File([new ArrayBuffer(5 * 1024 * 1024)], 'test.png')
+    const result = validateFileSize(file)
+    expect(result.valid).toBe(true)
+  })
+
+  it('rejects files over 10MB', () => {
+    const file = new File([new ArrayBuffer(15 * 1024 * 1024)], 'test.png')
+    const result = validateFileSize(file)
+    expect(result.valid).toBe(false)
+  })
+})
+```
+
+### Key Points
+
+- Use `jsdom` environment for browser APIs (File, Blob, Canvas)
+- Mock complex browser APIs (Canvas, Image) when needed
+- Test edge cases: invalid inputs, boundary conditions
+- Keep tests focused on pure logic, not DOM interactions
 
 ---
 
@@ -348,6 +429,126 @@ test('logged out user is redirected', async ({ page, context }) => {
 
 **Reference:** https://github.com/better-auth/better-auth/issues/3743
 
+## Testing Services via E2E
+
+When creating new services (`app/services/*.server.ts`), they must be tested via E2E using **test-only endpoints**.
+
+### Pattern: Test Endpoints
+
+Create endpoints under `/api/__test__/[service-name]` that:
+1. Return 404 if `DB_TEST_URL` is not set (only work during tests)
+2. Accept JSON payload with required parameters
+3. Call the service and return the result
+
+### Example: Test Endpoint
+
+**File:** `app/routes/api.__test__.premium.tsx`
+
+```typescript
+import type { ActionFunctionArgs, LoaderFunctionArgs } from 'react-router'
+import { z } from 'zod'
+import { isPremiumUser, getPremiumStatus, grantPremium } from '~/services/premium.server'
+
+const grantSchema = z.object({
+  userId: z.string().uuid(),
+  stripeCustomerId: z.string().min(1),
+})
+
+// GET /api/__test__/premium?userId=xxx - Check premium status
+export async function loader({ request }: LoaderFunctionArgs) {
+  if (!process.env.DB_TEST_URL) {
+    throw new Response('Not found', { status: 404 })
+  }
+
+  const url = new URL(request.url)
+  const userId = url.searchParams.get('userId')
+  if (!userId) {
+    throw new Response('Missing userId', { status: 400 })
+  }
+
+  const status = await getPremiumStatus(userId)
+  return Response.json(status)
+}
+
+// POST /api/__test__/premium - Grant premium
+export async function action({ request }: ActionFunctionArgs) {
+  if (request.method !== 'POST') {
+    throw new Response('Method Not Allowed', { status: 405 })
+  }
+
+  if (!process.env.DB_TEST_URL) {
+    throw new Response('Not found', { status: 404 })
+  }
+
+  const parsed = grantSchema.safeParse(await request.json())
+  if (!parsed.success) {
+    throw new Response('Invalid input', { status: 400 })
+  }
+
+  await grantPremium(parsed.data.userId, parsed.data.stripeCustomerId)
+  return Response.json({ success: true })
+}
+```
+
+### Route Registration
+
+Add test routes to `app/routes.ts`:
+
+```typescript
+route('api/__test__/premium', 'routes/api.__test__.premium.tsx'),
+```
+
+### E2E Test Example
+
+```typescript
+import { test, expect, seedUser, FIXTURES } from '../fixtures'
+import { resetDatabase } from '../helpers/db'
+
+test.describe('Premium service', () => {
+  test.beforeEach(async ({ dbContext }) => {
+    await resetDatabase(dbContext)
+  })
+
+  test('user is not premium by default', async ({ request, appServer, dbContext }) => {
+    const userId = await seedUser(dbContext, 'testUser')
+    const baseUrl = `http://localhost:${appServer.port}`
+
+    const response = await request.get(`${baseUrl}/api/__test__/premium?userId=${userId}`)
+    expect(response.ok()).toBe(true)
+
+    const status = await response.json()
+    expect(status.isPremium).toBe(false)
+    expect(status.premiumSince).toBeNull()
+  })
+
+  test('grantPremium makes user premium', async ({ request, appServer, dbContext }) => {
+    const userId = await seedUser(dbContext, 'testUser')
+    const baseUrl = `http://localhost:${appServer.port}`
+
+    // Grant premium
+    const grantResponse = await request.post(`${baseUrl}/api/__test__/premium`, {
+      data: { userId, stripeCustomerId: 'cus_test123' },
+    })
+    expect(grantResponse.ok()).toBe(true)
+
+    // Verify status
+    const statusResponse = await request.get(`${baseUrl}/api/__test__/premium?userId=${userId}`)
+    const status = await statusResponse.json()
+    expect(status.isPremium).toBe(true)
+    expect(status.premiumSince).not.toBeNull()
+  })
+})
+```
+
+### Key Points
+
+- Test endpoints are **invisible in production** (404 without `DB_TEST_URL`)
+- Use `request` fixture from Playwright for API calls
+- Always seed required data before testing
+- Test both success and edge cases
+
+---
+
 ## Rules (MUST FOLLOW)
 
 1. **Import from `../fixtures`** - Never from `@playwright/test` directly
@@ -356,6 +557,7 @@ test('logged out user is redirected', async ({ page, context }) => {
 4. **Reset in `beforeEach`** - Never rely on test execution order
 5. **Docker must be running** - Tests will fail otherwise
 6. **Run with `--retries=1`** - As specified in AGENTS.md
+7. **Test services via E2E endpoints** - Create `/api/__test__/[name]` routes for service testing
 
 ## How It Works (Technical Details)
 

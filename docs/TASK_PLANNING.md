@@ -25,6 +25,8 @@ Before creating any planning document:
 - Do NOT start writing the planning file until you have gathered ALL the information required
 - Questions may cover: scope, edge cases, UI/UX expectations, business rules, integration details, etc.
 - **If the task involves creating tests:** MUST read `docs/TESTING.md` before planning to understand project conventions, existing fixtures, and patterns
+- **If the task involves creating server-side services (`app/services/*.server.ts`):** MUST read `docs/TESTING.md` section "Testing Services via E2E" to understand how to test services via test-only endpoints
+- **If the task involves creating client-side services (`app/services/*.ts` without `.server`):** MUST read `docs/TESTING.md` section "Testing Client-Side Services" to understand how to test with Vitest unit tests
 
 ## Planning File Structure
 
@@ -126,13 +128,37 @@ If the task involves UI changes, include an i18n section:
 - Use `snake_case` with logical prefixes (`*_title`, `*_label`, `*_error`, etc.)
 - See `docs/I18N.md` for full documentation
 
-#### 5. E2E Test Plan
-- List of test scenarios that guarantee the feature works
-- Each test should include:
-  - **Test name**
-  - **Preconditions**
-  - **Steps**
-  - **Expected result**
+#### 5. E2E Test Plan (or Unit Test Plan)
+
+**For server-side features** (routes, loaders, actions, `*.server.ts` services):
+- Write E2E tests in `tests/e2e/*.spec.ts`
+- Use TestContainers for database isolation
+- Run with `npm run test:e2e -- --retries=1`
+
+**For client-side services** (`app/services/*.ts` without `.server`):
+- Write unit tests in `tests/unit/*.test.ts`
+- Use Vitest with jsdom environment
+- Run with `npm run test:unit`
+
+Each test should include:
+- **Test name**
+- **Preconditions**
+- **Steps**
+- **Expected result**
+
+#### 6. Definition of Done (CRITICAL)
+
+**A task is NOT complete unless ALL of the following are green:**
+
+1. **ALL relevant tests pass:**
+   - `npm run test:e2e -- --retries=1` (if task has E2E tests)
+   - `npm run test:unit` (if task has unit tests)
+   - **If any test fails, the task is NOT done**
+2. `npm run typecheck` passes
+3. `npm run lint` passes
+4. All acceptance criteria from section 1 are met
+
+**Never mark a task as complete with failing tests.**
 
 ## Example Planning File
 
