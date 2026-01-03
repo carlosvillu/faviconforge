@@ -36,5 +36,14 @@
   "theme_light": "Light",
   "theme_dark": "Dark",
   "theme_system": "System",
-  "theme_label": "Theme"
+  "theme_label": "Theme",
+
+  "premium_user": "Premium User",
+  "not_premium": "Free User",
+  "premium_since": "Premium since {{date}}",
+  "upgrade_to_premium": "Upgrade to Premium",
+  "buy_premium": "Buy Premium",
+  "premium_price": "€5 one-time",
+  "premium_benefits_title": "Premium Benefits",
+  "premium_benefits_description": "Get all favicon formats including PWA, Apple Touch icons, Windows tiles, and manifest customization."
 }
