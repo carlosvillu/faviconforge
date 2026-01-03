@@ -51,5 +51,26 @@
   "image_file_too_large": "File is too large. Maximum size: {{maxSizeMB}}MB",
   "image_too_small": "Image is too small. Minimum size: {{minSize}}x{{minSize}} pixels",
   "image_not_square": "Image must be square (same width and height)",
-  "image_load_error": "Failed to load image. Please try another file."
+  "image_load_error": "Failed to load image. Please try another file.",
+
+  "upload_title_line1": "Upload Your",
+  "upload_title_line2": "Image",
+  "upload_subtitle": "Square images only. Minimum 512x512px. Max 10MB.",
+  "upload_drag_drop": "DRAG & DROP",
+  "upload_drop_here": "DROP IT HERE!",
+  "upload_or_click": "or click to browse",
+  "upload_browse_files": "Browse Files",
+  "upload_validating": "Validating...",
+  "upload_success": "FILE UPLOADED!",
+  "upload_choose_different": "Choose Different",
+  "upload_continue": "Continue",
+  "upload_try_again": "Try Again",
+  "upload_error_title": "ERROR",
+  "upload_accepted_formats": "Accepted formats:",
+  "upload_formats_list": "PNG • JPEG • WebP • SVG",
+  "upload_requirements_title": "Image Requirements:",
+  "upload_req_square": "Square aspect ratio (1:1)",
+  "upload_req_min_size": "Minimum 512×512 pixels",
+  "upload_req_max_file": "Maximum 10MB file size",
+  "upload_req_format": "PNG, JPEG, WebP or SVG format"
 }

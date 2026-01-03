@@ -26,6 +26,7 @@ import { initI18nClientSync, getI18nInstance } from '~/lib/i18n.client'
 import { auth } from '~/lib/auth'
 import { Toaster } from '~/components/ui/sonner'
 import { ThemeProvider } from '~/components/ThemeContext'
+import { HeaderStepProvider } from '~/contexts/HeaderStepContext'
 import { getThemeCookie, getThemeInitScript } from '~/lib/theme'
 
 export const links: Route.LinksFunction = () => [
@@ -142,8 +143,10 @@ export default function App({ loaderData }: Route.ComponentProps) {
     // Fallback during SSR if loader hasn't run yet (shouldn't happen normally)
     return (
       <ThemeProvider initialPreference={themePreference}>
-        <Header session={loaderData?.session ?? null} user={loaderData?.user ?? null} />
-        <Outlet />
+        <HeaderStepProvider>
+          <Header session={loaderData?.session ?? null} user={loaderData?.user ?? null} />
+          <Outlet />
+        </HeaderStepProvider>
       </ThemeProvider>
     )
   }
@@ -151,9 +154,11 @@ export default function App({ loaderData }: Route.ComponentProps) {
   return (
     <ThemeProvider initialPreference={themePreference}>
       <I18nextProvider i18n={i18nInstance}>
-        <Header session={loaderData.session} user={loaderData.user} />
-        <Outlet />
-        <Toaster />
+        <HeaderStepProvider>
+          <Header session={loaderData.session} user={loaderData.user} />
+          <Outlet />
+          <Toaster />
+        </HeaderStepProvider>
       </I18nextProvider>
     </ThemeProvider>
   )
