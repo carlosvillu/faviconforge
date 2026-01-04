@@ -40,11 +40,6 @@ export function UserDropdown({ user, onLogout }: UserDropdownProps) {
           <div className="w-8 h-8 rounded-full bg-ink text-paper flex items-center justify-center text-xs font-medium">
             {initials}
           </div>
-
-          {/* Email: desktop only */}
-          <span className="hidden md:block text-sm text-slate truncate max-w-[150px]">
-            {user.email}
-          </span>
         </button>
       </DropdownMenuTrigger>
 

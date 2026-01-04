@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { signIn } from '~/lib/auth.client'
-import { Button } from '~/components/ui/button'
+import { BrutalistButton } from '~/components/BrutalistButton'
 
 interface GoogleAuthButtonProps {
   mode: 'signup' | 'login'
@@ -33,12 +33,11 @@ export function GoogleAuthButton({ mode, callbackURL = '/' }: GoogleAuthButtonPr
   }
 
   return (
-    <Button
+    <BrutalistButton
       type="button"
-      variant="secondary"
       disabled={isLoading}
       onClick={handleClick}
-      className="w-full"
+      className="w-full h-auto py-4 text-lg"
     >
       <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
         <path
@@ -59,6 +58,6 @@ export function GoogleAuthButton({ mode, callbackURL = '/' }: GoogleAuthButtonPr
         />
       </svg>
       {isLoading ? t('google_connecting') : t('google_continue')}
-    </Button>
+    </BrutalistButton>
   )
 }

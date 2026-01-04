@@ -1,9 +1,9 @@
 import { Link, useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { authClient } from '~/lib/auth.client'
-import { Button } from '~/components/ui/button'
 import { LanguageSelector } from '~/components/LanguageSelector'
 import { UserDropdown } from '~/components/UserDropdown'
+import { BrutalistButton } from '~/components/BrutalistButton'
 import { useHeaderStep } from '~/contexts/HeaderStepContext'
 import type { Session, User } from '~/lib/auth'
 
@@ -27,9 +27,7 @@ export function Header({ session, user }: HeaderProps) {
       <div className="max-w-7xl mx-auto flex justify-between items-center">
         {/* Logo */}
         <Link to="/">
-          <h1 className="text-3xl font-black uppercase tracking-tight">
-            FaviconForge
-          </h1>
+          <h1 className="text-3xl font-black uppercase tracking-tight">FaviconForge</h1>
         </Link>
 
         {/* Auth Section */}
@@ -42,12 +40,9 @@ export function Header({ session, user }: HeaderProps) {
           {session && user ? (
             <UserDropdown user={user} onLogout={handleLogout} />
           ) : (
-            <Button
-              asChild
-              className="bg-black text-yellow-300 font-black uppercase border-4 border-black hover:bg-yellow-300 hover:text-black transition-colors px-6 py-3"
-            >
+            <BrutalistButton asChild className="px-6 py-3">
               <Link to="/auth/login">{t('login')}</Link>
-            </Button>
+            </BrutalistButton>
           )}
           <LanguageSelector />
         </div>
