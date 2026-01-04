@@ -3,7 +3,6 @@ import type { LoaderFunctionArgs } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { getCurrentUser } from '~/lib/auth.server'
 import { useHeaderStep } from '~/contexts/HeaderStepContext'
-import { Footer } from '~/components/landing/Footer'
 import {
   UploadProgressBar,
   UploadDropzone,
@@ -52,7 +51,6 @@ export default function UploadPage() {
         <UploadDropzone />
         <ImageRequirements />
       </main>
-      <Footer />
     </div>
   )
 }

@@ -37,7 +37,7 @@ export function LanguageSelector() {
           <span className="uppercase">{currentLocale}</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="min-w-[140px]">
+      <DropdownMenuContent align="end" className="min-w-[140px] bg-white">
         {LANGUAGE_OPTIONS.map((option) => (
           <DropdownMenuItem
             key={option.locale}

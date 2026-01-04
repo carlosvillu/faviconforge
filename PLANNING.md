@@ -94,12 +94,14 @@ Antes de empezar, necesitas tener configurado:
 
 #### Task 1.3: Update landing page for FaviconForge
 
-- [ ] Update `app/routes/home.tsx` hero section with FaviconForge value proposition
-- [ ] Add CTA button linking to `/upload`
-- [ ] Add brief explanation of what formats are generated (free vs premium)
-- [ ] Add trust signals (no account needed for free tier, client-side processing)
-- [ ] Update i18n keys for new landing content
-- [ ] Run `npm run typecheck` and `npm run lint`
+- [x] Update `app/routes/home.tsx` hero section with FaviconForge value proposition
+- [x] Add CTA button linking to `/upload`
+- [x] Add brief explanation of what formats are generated (free vs premium)
+- [x] Add trust signals (no account needed for free tier, client-side processing)
+- [x] Update i18n keys for new landing content
+- [x] Run `npm run typecheck` and `npm run lint`
+- [x] Create E2E tests for landing page
+- [x] Run `npm run test:e2e -- --retries=1` and verify tests pass
 
 ---
 
@@ -447,11 +449,11 @@ Sequential list of all tasks in recommended order:
 
 | Phase | Task | Status         | Notes               |
 | ----- | ---- | -------------- | ------------------- |
-| 0     | 0.1  | ⬜ Not Started | Database schema     |
-| 0     | 0.2  | ⬜ Not Started | Premium helpers     |
-| 1     | 1.1  | ⬜ Not Started | Image validation    |
-| 1     | 1.2  | ⬜ Not Started | Upload route        |
-| 1     | 1.3  | ⬜ Not Started | Landing page        |
+| 0     | 0.1  | ✅ Complete    | Database schema     |
+| 0     | 0.2  | ✅ Complete    | Premium helpers     |
+| 1     | 1.1  | ✅ Complete    | Image validation    |
+| 1     | 1.2  | ✅ Complete    | Upload route        |
+| 1     | 1.3  | ✅ Complete    | Landing page        |
 | 2     | 2.1  | ⬜ Not Started | Dependencies        |
 | 2     | 2.2  | ⬜ Not Started | Favicon service     |
 | 2     | 2.3  | ⬜ Not Started | Preview route       |

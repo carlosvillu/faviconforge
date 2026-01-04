@@ -1,3 +1,4 @@
 export { HeroSection } from './HeroSection'
-export { EditorialDivider } from './EditorialDivider'
-export { Footer } from './Footer'
+export { FormatDemoCard } from './FormatDemoCard'
+export { FeaturesSection } from './FeaturesSection'
+export { PricingSection } from './PricingSection'

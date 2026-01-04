@@ -1,26 +1,43 @@
 import { Link } from 'react-router'
 import { useTranslation } from 'react-i18next'
-import { Button } from '~/components/ui/button'
+import { FormatDemoCard } from './FormatDemoCard'
 
 export function HeroSection() {
   const { t } = useTranslation()
 
   return (
-    <section className="min-h-screen flex items-center justify-center px-6">
-      <div className="max-w-4xl mx-auto text-center">
-        <h1 className="text-5xl md:text-7xl font-bold mb-6">
-          [PROJECT_NAME]
-        </h1>
-        <p className="text-xl md:text-2xl text-muted-foreground mb-8">
-          A modern SaaS template with authentication, database, and i18n built-in.
-        </p>
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Button asChild size="lg">
-            <Link to="/auth/signup">{t('signup')}</Link>
-          </Button>
-          <Button asChild variant="outline" size="lg">
-            <Link to="/auth/login">{t('login')}</Link>
-          </Button>
+    <section className="bg-yellow-300 py-20">
+      <div className="max-w-7xl mx-auto px-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+          {/* Left Column - Text Content */}
+          <div className="space-y-8">
+            <h2 className="text-7xl font-black uppercase leading-none">
+              {t('landing_hero_line1')}
+              <br />
+              <span className="bg-black text-yellow-300 px-2">
+                {t('landing_hero_line2')}
+              </span>
+              <br />
+              {t('landing_hero_line3')}
+              <br />
+              {t('landing_hero_line4')}
+            </h2>
+
+            <p className="text-2xl font-bold border-l-8 border-black pl-4">
+              {t('landing_hero_tagline')}
+            </p>
+
+            <Link to="/upload">
+              <button className="bg-black text-yellow-300 px-8 py-4 font-black uppercase text-lg border-4 border-black hover:translate-x-1 hover:translate-y-1 transition-transform">
+                {t('landing_hero_cta')} →
+              </button>
+            </Link>
+          </div>
+
+          {/* Right Column - Format Demo */}
+          <div className="relative">
+            <FormatDemoCard />
+          </div>
         </div>
       </div>
     </section>

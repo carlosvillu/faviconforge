@@ -14,6 +14,7 @@ import { type i18n } from 'i18next'
 import type { Route } from './+types/root'
 import './app.css'
 import { Header } from '~/components/Header'
+import { Footer } from '~/components/Footer'
 import {
   detectLocale,
   parseLangCookie,
@@ -146,6 +147,7 @@ export default function App({ loaderData }: Route.ComponentProps) {
         <HeaderStepProvider>
           <Header session={loaderData?.session ?? null} user={loaderData?.user ?? null} />
           <Outlet />
+          <Footer />
         </HeaderStepProvider>
       </ThemeProvider>
     )
@@ -157,6 +159,7 @@ export default function App({ loaderData }: Route.ComponentProps) {
         <HeaderStepProvider>
           <Header session={loaderData.session} user={loaderData.user} />
           <Outlet />
+          <Footer />
           <Toaster />
         </HeaderStepProvider>
       </I18nextProvider>

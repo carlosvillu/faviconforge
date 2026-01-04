@@ -1,13 +1,13 @@
-import { HeroSection, Footer } from '~/components/landing'
+import { HeroSection, FeaturesSection, PricingSection } from '~/components/landing'
 import type { LoaderFunctionArgs } from 'react-router'
 import { getCurrentUser } from '~/lib/auth.server'
 
 export function meta() {
   return [
-    { title: '[PROJECT_NAME]' },
+    { title: 'FaviconForge - Generate All Favicon Formats' },
     {
       name: 'description',
-      content: '[PROJECT_DESCRIPTION]',
+      content: 'Generate all required favicon formats from a single image. 15+ formats in under 10 seconds. Free tier available, premium for €5 one-time.',
     },
   ]
 }
@@ -19,9 +19,10 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 export default function Home() {
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-yellow-300">
       <HeroSection />
-      <Footer />
+      <FeaturesSection />
+      <PricingSection />
     </div>
   )
 }
