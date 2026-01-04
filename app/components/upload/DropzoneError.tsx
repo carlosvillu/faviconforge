@@ -26,7 +26,10 @@ export function DropzoneError({
         </div>
       </div>
       <Button
-        onClick={onTryAgain}
+        onClick={(e) => {
+          e.stopPropagation()
+          onTryAgain()
+        }}
         className="bg-black text-yellow-300 font-black uppercase border-4 border-black hover:bg-yellow-300 hover:text-black transition-colors px-6 py-3"
       >
         {t('upload_try_again')}

@@ -112,42 +112,42 @@ Antes de empezar, necesitas tener configurado:
 
 #### Task 2.1: Install favicon generation dependencies
 
-- [ ] Install `jszip` for ZIP package generation
-- [ ] Install `png-to-ico` for ICO file generation
-- [ ] Verify bundle size impact is acceptable
-- [ ] Run `npm run typecheck` and `npm run build` to verify no issues
+- [x] Install `jszip` for ZIP package generation
+- [x] Install `png-to-ico` for ICO file generation
+- [x] Verify bundle size impact is acceptable
+- [x] Run `npm run typecheck` and `npm run build` to verify no issues
 
 #### Task 2.2: Create favicon generation service
 
-- [ ] Create `app/services/faviconGeneration.ts`
-- [ ] Implement `resizeImage(imageData: string, size: number): Promise<Blob>` using Canvas API
-- [ ] Implement `generatePNGFormats(imageData: string): Promise<FaviconPNG[]>` - all PNG sizes
-- [ ] Implement `generateICO(imageData: string): Promise<Blob>` - multi-resolution ICO
-- [ ] Implement `generateManifest(options: ManifestOptions): string` - customizable manifest.json
-- [ ] Implement `generateBrowserConfig(): string` - Windows browserconfig.xml
-- [ ] Implement `generateHTMLSnippet(isPremium: boolean): string` - ready-to-use HTML code
-- [ ] Write unit tests in `tests/unit/faviconGeneration.test.ts`
-- [ ] Run `npm run test:unit` and verify tests pass
-- [ ] Run `npm run typecheck` and `npm run lint`
+- [x] Create `app/services/faviconGeneration.ts`
+- [x] Implement `resizeImage(imageData: string, size: number): Promise<Blob>` using Canvas API
+- [x] Implement `generatePNGFormats(imageData: string): Promise<FaviconPNG[]>` - all PNG sizes
+- [x] Implement `generateICO(imageData: string): Promise<Blob>` - multi-resolution ICO
+- [x] Implement `generateManifest(options: ManifestOptions): string` - customizable manifest.json
+- [x] Implement `generateBrowserConfig(): string` - Windows browserconfig.xml
+- [x] Implement `generateHTMLSnippet(isPremium: boolean): string` - ready-to-use HTML code
+- [x] Write unit tests in `tests/unit/faviconGeneration.test.ts`
+- [x] Run `npm run test:unit` and verify tests pass
+- [x] Run `npm run typecheck` and `npm run lint`
 
 #### Task 2.3: Create preview route and components
 
-- [ ] Register `/preview` route in `app/routes.ts`
-- [ ] Create `app/routes/preview.tsx` with loader (check sessionStorage has image, else redirect to /upload)
-- [ ] Create `app/components/FaviconPreview.tsx` - container component
-- [ ] Create `app/components/previews/BrowserTabPreview.tsx` - Chrome/Safari tab mockup
-- [ ] Create `app/components/previews/IOSHomePreview.tsx` - iOS home screen mockup
-- [ ] Create `app/components/previews/AndroidHomePreview.tsx` - Android home screen mockup
-- [ ] Create `app/components/previews/WindowsTilePreview.tsx` - Windows Start menu mockup
-- [ ] Create `app/components/previews/BookmarkPreview.tsx` - Bookmark bar mockup
-- [ ] Create `app/hooks/useFaviconGeneration.ts` - orchestrates generation on preview load
-- [ ] Add "Continue to Download" CTA button
-- [ ] Add "Upload different image" link
-- [ ] Add i18n keys for preview UI
-- [ ] Run `npm run typecheck` and `npm run lint`
-- [ ] Write E2E test: navigate to /preview with valid sessionStorage → previews render
-- [ ] Write E2E test: navigate to /preview without sessionStorage → redirect to /upload
-- [ ] Run `npm run test:e2e -- --retries=1` and verify tests pass
+- [x] Register `/preview` route in `app/routes.ts`
+- [x] Create `app/routes/preview.tsx` with loader (check sessionStorage has image, else redirect to /upload)
+- [x] Create `app/components/preview/PreviewGrid.tsx` - container component with 6 preview cards
+- [x] Create `app/components/preview/BrowserTabPreview.tsx` - Chrome/Safari tab mockup
+- [x] Create `app/components/preview/IOSHomePreview.tsx` - iOS home screen mockup
+- [x] Create `app/components/preview/AndroidHomePreview.tsx` - Android home screen mockup
+- [x] Create `app/components/preview/WindowsTilePreview.tsx` - Windows Start menu mockup
+- [x] Create `app/components/preview/BookmarkPreview.tsx` - Bookmark bar mockup
+- [x] Create `app/components/preview/PWAInstallPreview.tsx` - PWA install dialog mockup
+- [x] Create `app/hooks/useFaviconGeneration.ts` - orchestrates generation on preview load
+- [x] Add "Download" and "Back" CTA buttons
+- [x] Add i18n keys for preview UI (23 keys in EN and ES)
+- [x] Run `npm run typecheck` and `npm run lint`
+- [x] Write E2E test: navigate to /preview with valid sessionStorage → previews render
+- [x] Write E2E test: navigate to /preview without sessionStorage → redirect to /upload
+- [x] Run `npm run test:e2e -- --retries=1` and verify tests pass (7/7 preview tests passing)
 
 ---
 
@@ -454,9 +454,9 @@ Sequential list of all tasks in recommended order:
 | 1     | 1.1  | ✅ Complete    | Image validation    |
 | 1     | 1.2  | ✅ Complete    | Upload route        |
 | 1     | 1.3  | ✅ Complete    | Landing page        |
-| 2     | 2.1  | ⬜ Not Started | Dependencies        |
-| 2     | 2.2  | ⬜ Not Started | Favicon service     |
-| 2     | 2.3  | ⬜ Not Started | Preview route       |
+| 2     | 2.1  | ✅ Complete    | Dependencies        |
+| 2     | 2.2  | ✅ Complete    | Favicon service     |
+| 2     | 2.3  | ✅ Complete    | Preview route       |
 | 3     | 3.1  | ⬜ Not Started | ZIP service         |
 | 3     | 3.2  | ⬜ Not Started | Download route      |
 | 4     | 4.1  | ⬜ Not Started | Google-only auth    |

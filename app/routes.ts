@@ -9,4 +9,5 @@ export default [
   route('auth/signup', 'routes/auth.signup.tsx'),
   route('auth/login', 'routes/auth.login.tsx'),
   route('upload', 'routes/upload.tsx'),
+  route('preview', 'routes/preview.tsx'),
 ] satisfies RouteConfig
