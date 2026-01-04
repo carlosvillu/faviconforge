@@ -10,4 +10,5 @@ export default [
   route('auth/login', 'routes/auth.login.tsx'),
   route('upload', 'routes/upload.tsx'),
   route('preview', 'routes/preview.tsx'),
+  route('download', 'routes/download.tsx'),
 ] satisfies RouteConfig

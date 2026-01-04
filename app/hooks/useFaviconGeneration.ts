@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { generateAllFormats } from '~/services/faviconGeneration'
 import type { FaviconFormat } from '~/services/faviconGeneration.types'
+import { cacheFavicons } from '~/services/faviconCache'
 
 type GenerationState = 'idle' | 'generating' | 'complete' | 'error'
 
@@ -46,8 +47,10 @@ export function useFaviconGeneration(): UseFaviconGenerationReturn {
     try {
       const result = await generateAllFormats({
         imageData: source,
-        isPremium: false, // Generate all sizes, will blur premium ones in UI
+        isPremium: true,
       })
+
+      await cacheFavicons(result, source)
 
       // Convert blobs to object URLs
       const formatsWithUrls = result.formats.map((format: FaviconFormat) => ({

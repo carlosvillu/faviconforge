@@ -158,15 +158,15 @@ Antes de empezar, necesitas tener configurado:
 
 #### Task 3.1: Create ZIP generation service
 
-- [ ] Create `app/services/zipGeneration.ts`
-- [ ] Implement `generateFreeZip(faviconData: GeneratedFavicons): Promise<Blob>` - basic formats only
-- [ ] Implement `generatePremiumZip(faviconData: GeneratedFavicons, manifestOptions: ManifestOptions): Promise<Blob>` - all formats
-- [ ] Include proper folder structure as per PRD (web/, ios/, android/, windows/, pwa/)
-- [ ] Include `snippet.html` with ready-to-use code
-- [ ] Include `README.md` in premium ZIP only
-- [ ] Write unit tests in `tests/unit/zipGeneration.test.ts`
-- [ ] Run `npm run test:unit` and verify tests pass
-- [ ] Run `npm run typecheck` and `npm run lint`
+- [x] Create `app/services/zipGeneration.ts`
+- [x] Implement `generateFreeZip(faviconData: GeneratedFavicons): Promise<Blob>` - basic formats only
+- [x] Implement `generatePremiumZip(faviconData: GeneratedFavicons, manifestOptions: ManifestOptions): Promise<Blob>` - all formats
+- [x] Include proper folder structure as per PRD (web/, ios/, android/, windows/, pwa/)
+- [x] Include `snippet.html` with ready-to-use code
+- [x] Include `README.md` in premium ZIP only
+- [x] Write unit tests in `tests/unit/zipGeneration.test.ts`
+- [x] Run `npm run test:unit` and verify tests pass
+- [x] Run `npm run typecheck` and `npm run lint`
 
 #### Task 3.2: Create download route and component
 

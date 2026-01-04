@@ -37,7 +37,7 @@ export const test = base.extend<object, AppWorkerFixtures>({
     async ({ dbContext }, use, workerInfo) => {
       const requestedPort = 4000 + workerInfo.workerIndex
 
-      const serverProcess = spawn('npx', ['react-router', 'dev', '--port', String(requestedPort)], {
+      const serverProcess = spawn('npx', ['-y', 'react-router', 'dev', '--port', String(requestedPort)], {
         env: { ...process.env, DB_TEST_URL: dbContext.connectionString },
         cwd: process.cwd(),
         stdio: 'pipe',
