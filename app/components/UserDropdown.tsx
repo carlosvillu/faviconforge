@@ -10,7 +10,7 @@ import {
 import { ThemeToggle } from '~/components/ThemeToggle'
 
 type UserDropdownProps = {
-  user: { email: string; role?: string | null }
+  user: { email: string; role?: string | null; image?: string | null }
   onLogout: () => void | Promise<void>
 }
 
@@ -36,9 +36,13 @@ export function UserDropdown({ user, onLogout }: UserDropdownProps) {
           className="flex items-center gap-2 hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-ink focus:ring-offset-2"
           aria-label="User menu"
         >
-          {/* Avatar: always visible */}
-          <div className="w-8 h-8 rounded-full bg-ink text-paper flex items-center justify-center text-xs font-medium">
-            {initials}
+          {/* Avatar: image or initials */}
+          <div className="w-8 h-8 rounded-full bg-ink text-paper flex items-center justify-center text-xs font-medium overflow-hidden">
+            {user.image ? (
+              <img src={user.image} alt={user.email} className="w-full h-full object-cover" />
+            ) : (
+              initials
+            )}
           </div>
         </button>
       </DropdownMenuTrigger>

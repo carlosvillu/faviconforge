@@ -31,7 +31,7 @@ import { HeaderStepProvider } from '~/contexts/HeaderStepContext'
 import { getThemeCookie, getThemeInitScript } from '~/lib/theme'
 
 export const links: Route.LinksFunction = () => [
-  { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
+  { rel: 'icon', type: 'image/svg+xml', href: '/favicon-b.svg' },
   { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
   {
     rel: 'preconnect',
