@@ -92,8 +92,6 @@ export default function DownloadPage() {
           <PremiumPackageCard
             isSelected={download.selectedTier === 'premium'}
             onSelect={() => download.setSelectedTier('premium')}
-            isPremium={isPremium}
-            isLoggedIn={!!user}
           />
         </DownloadSection>
 

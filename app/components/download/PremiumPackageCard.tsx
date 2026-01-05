@@ -3,16 +3,9 @@ import { useTranslation } from 'react-i18next'
 type PremiumPackageCardProps = {
   isSelected: boolean
   onSelect: () => void
-  isPremium: boolean
-  isLoggedIn: boolean
 }
 
-export function PremiumPackageCard({
-  isSelected,
-  onSelect,
-  isPremium,
-  isLoggedIn,
-}: PremiumPackageCardProps) {
+export function PremiumPackageCard({ isSelected, onSelect }: PremiumPackageCardProps) {
   const { t } = useTranslation()
 
   const items = [
@@ -36,24 +29,10 @@ export function PremiumPackageCard({
         {t('download_best_value')}
       </div>
 
-      <div className="flex items-start justify-between gap-6">
-        <div>
-          <div className="text-3xl font-black uppercase mb-2">{t('download_premium_title')}</div>
-          <div className="text-6xl font-black">€5</div>
-          <div className="mt-2 font-black text-sm uppercase">{t('download_premium_lifetime')}</div>
-        </div>
-
-        <div className="text-right">
-          {isLoggedIn && isPremium ? (
-            <div className="inline-block bg-green-600 text-white px-3 py-1 text-xs font-black uppercase border-2 border-black">
-              OWNED
-            </div>
-          ) : (
-            <div className="inline-block bg-red-600 text-white px-3 py-1 text-xs font-black uppercase border-2 border-black">
-              PREMIUM
-            </div>
-          )}
-        </div>
+      <div>
+        <div className="text-3xl font-black uppercase mb-2">{t('download_premium_title')}</div>
+        <div className="text-6xl font-black">€5</div>
+        <div className="mt-2 font-black text-sm uppercase">{t('download_premium_lifetime')}</div>
       </div>
 
       <div className="border-t-4 border-yellow-300 pt-6 mt-6">
@@ -83,7 +62,7 @@ function getCardClassName(params: { isSelected: boolean; variant: 'free' | 'prem
 
   if (variant === 'premium') {
     return [
-      'relative border-8 border-black p-8 text-left transition-transform overflow-hidden',
+      'relative border-8 border-black p-8 text-left transition-transform overflow-visible',
       isSelected
         ? 'bg-black text-yellow-300 scale-[1.02]'
         : 'bg-white hover:translate-x-1 hover:translate-y-1',
@@ -91,7 +70,7 @@ function getCardClassName(params: { isSelected: boolean; variant: 'free' | 'prem
   }
 
   return [
-    'relative border-8 border-black p-8 text-left transition-transform overflow-hidden',
+    'relative border-8 border-black p-8 text-left transition-transform overflow-visible',
     isSelected ? 'bg-yellow-300 scale-[1.02]' : 'bg-white hover:translate-x-1 hover:translate-y-1',
   ].join(' ')
 }

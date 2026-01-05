@@ -30,11 +30,11 @@
   "or_divider": "or",
   "loading": "Loading...",
 
-  "hero_title": "Welcome to [PROJECT_NAME]",
+  "hero_title": "Welcome to FaviconForge",
   "hero_description": "Your project description goes here",
   "hero_cta": "Get started",
 
-  "footer_copyright": "© 2025 [PROJECT_NAME]",
+  "footer_copyright": "© 2026 FaviconForge",
 
   "theme_light": "Light",
   "theme_dark": "Dark",
@@ -55,6 +55,10 @@
   "image_too_small": "Image is too small. Minimum size: {{minSize}}x{{minSize}} pixels",
   "image_not_square": "Image must be square (same width and height)",
   "image_load_error": "Failed to load image. Please try another file.",
+
+  "storage_error": "Failed to save image. Please try again.",
+  "storage_quota_exceeded": "Image too large for browser storage. Please use a smaller image or clear your browser cache.",
+  "storage_not_available": "Browser storage not available. Please check privacy settings or try a different browser.",
 
   "upload_title_line1": "Upload Your",
   "upload_title_line2": "Image",

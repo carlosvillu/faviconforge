@@ -17,7 +17,7 @@ type ThemeProviderProps = {
 
 export function ThemeProvider({ children, initialPreference }: ThemeProviderProps) {
   const [preference, setPreference] = useState<ThemePreference>(
-    initialPreference || 'system',
+    initialPreference || 'light',
   )
   const [systemPreference, setSystemPreference] = useState<Theme>(() => {
     if (typeof window === 'undefined') return 'light'

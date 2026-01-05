@@ -36,23 +36,19 @@ describe('generateFreeZip', () => {
     createMockFormat('favicon-48x48.png', 'free'),
   ]
 
-  const mockSourceImage = 'data:image/png;base64,mockdata'
+  const mockSourceImageBlob = new Blob(['mock-source-image'], { type: 'image/png' })
 
   it('generates ZIP with ICO and free formats', async () => {
     // Mock successful ICO fetch
     const mockIcoBlob = new Blob(['mock-ico'], { type: 'image/x-icon' })
-    mockFetch
-      .mockResolvedValueOnce({
-        blob: () => Promise.resolve(new Blob(['source-image'])),
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        blob: () => Promise.resolve(mockIcoBlob),
-      })
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      blob: () => Promise.resolve(mockIcoBlob),
+    })
 
     const result = await generateFreeZip({
       formats: mockFormats,
-      sourceImage: mockSourceImage,
+      sourceImageBlob: mockSourceImageBlob,
     })
 
     // Verify result structure
@@ -80,18 +76,14 @@ describe('generateFreeZip', () => {
       createMockFormat('apple-touch-icon.png', 'premium'),
     ]
 
-    mockFetch
-      .mockResolvedValueOnce({
-        blob: () => Promise.resolve(new Blob(['source-image'])),
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        blob: () => Promise.resolve(new Blob(['mock-ico'])),
-      })
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      blob: () => Promise.resolve(new Blob(['mock-ico'])),
+    })
 
     const result = await generateFreeZip({
       formats: mixedFormats,
-      sourceImage: mockSourceImage,
+      sourceImageBlob: mockSourceImageBlob,
     })
 
     const zip = await JSZip.loadAsync(result.blob)
@@ -103,17 +95,13 @@ describe('generateFreeZip', () => {
   })
 
   it('generates partial ZIP with warning when ICO fails', async () => {
-    mockFetch
-      .mockResolvedValueOnce({
-        blob: () => Promise.resolve(new Blob(['source-image'])),
-      })
-      .mockResolvedValueOnce({
-        ok: false,
-      })
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+    })
 
     const result = await generateFreeZip({
       formats: mockFormats,
-      sourceImage: mockSourceImage,
+      sourceImageBlob: mockSourceImageBlob,
     })
 
     expect(result.warnings).toContain('ico_generation_failed')
@@ -128,18 +116,14 @@ describe('generateFreeZip', () => {
   })
 
   it('snippet.html contains free tier instructions only', async () => {
-    mockFetch
-      .mockResolvedValueOnce({
-        blob: () => Promise.resolve(new Blob(['source-image'])),
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        blob: () => Promise.resolve(new Blob(['mock-ico'])),
-      })
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      blob: () => Promise.resolve(new Blob(['mock-ico'])),
+    })
 
     const result = await generateFreeZip({
       formats: mockFormats,
-      sourceImage: mockSourceImage,
+      sourceImageBlob: mockSourceImageBlob,
     })
 
     const zip = await JSZip.loadAsync(result.blob)
@@ -152,36 +136,28 @@ describe('generateFreeZip', () => {
   })
 
   it('filename includes timestamp', async () => {
-    mockFetch
-      .mockResolvedValueOnce({
-        blob: () => Promise.resolve(new Blob(['source-image'])),
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        blob: () => Promise.resolve(new Blob(['mock-ico'])),
-      })
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      blob: () => Promise.resolve(new Blob(['mock-ico'])),
+    })
 
     const result = await generateFreeZip({
       formats: mockFormats,
-      sourceImage: mockSourceImage,
+      sourceImageBlob: mockSourceImageBlob,
     })
 
     expect(result.filename).toMatch(/^faviconforge-\d+\.zip$/)
   })
 
   it('handles empty formats array gracefully', async () => {
-    mockFetch
-      .mockResolvedValueOnce({
-        blob: () => Promise.resolve(new Blob(['source-image'])),
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        blob: () => Promise.resolve(new Blob(['mock-ico'])),
-      })
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      blob: () => Promise.resolve(new Blob(['mock-ico'])),
+    })
 
     const result = await generateFreeZip({
       formats: [],
-      sourceImage: mockSourceImage,
+      sourceImageBlob: mockSourceImageBlob,
     })
 
     expect(result.blob).toBeInstanceOf(Blob)
@@ -194,15 +170,11 @@ describe('generateFreeZip', () => {
   })
 
   it('handles network error for ICO gracefully', async () => {
-    mockFetch
-      .mockResolvedValueOnce({
-        blob: () => Promise.resolve(new Blob(['source-image'])),
-      })
-      .mockRejectedValueOnce(new Error('Network error'))
+    mockFetch.mockRejectedValueOnce(new Error('Network error'))
 
     const result = await generateFreeZip({
       formats: mockFormats,
-      sourceImage: mockSourceImage,
+      sourceImageBlob: mockSourceImageBlob,
     })
 
     expect(result.warnings).toContain('ico_generation_failed')
@@ -247,21 +219,17 @@ describe('generatePremiumZip', () => {
   </msapplication>
 </browserconfig>`
 
-  const mockSourceImage = 'data:image/png;base64,mockdata'
+  const mockSourceImageBlob = new Blob(['mock-source-image'], { type: 'image/png' })
 
   it('generates ZIP with all formats in correct folders', async () => {
-    mockFetch
-      .mockResolvedValueOnce({
-        blob: () => Promise.resolve(new Blob(['source-image'])),
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        blob: () => Promise.resolve(new Blob(['mock-ico'])),
-      })
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      blob: () => Promise.resolve(new Blob(['mock-ico'])),
+    })
 
     const result = await generatePremiumZip({
       formats: mockFormats,
-      sourceImage: mockSourceImage,
+      sourceImageBlob: mockSourceImageBlob,
       manifestOptions: mockManifestOptions,
       manifest: mockManifest,
       browserConfig: mockBrowserConfig,
@@ -298,18 +266,14 @@ describe('generatePremiumZip', () => {
   })
 
   it('manifest.json contains correct options', async () => {
-    mockFetch
-      .mockResolvedValueOnce({
-        blob: () => Promise.resolve(new Blob(['source-image'])),
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        blob: () => Promise.resolve(new Blob(['mock-ico'])),
-      })
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      blob: () => Promise.resolve(new Blob(['mock-ico'])),
+    })
 
     const result = await generatePremiumZip({
       formats: mockFormats,
-      sourceImage: mockSourceImage,
+      sourceImageBlob: mockSourceImageBlob,
       manifestOptions: mockManifestOptions,
       manifest: mockManifest,
       browserConfig: mockBrowserConfig,
@@ -326,18 +290,14 @@ describe('generatePremiumZip', () => {
   })
 
   it('snippet.html contains premium sections', async () => {
-    mockFetch
-      .mockResolvedValueOnce({
-        blob: () => Promise.resolve(new Blob(['source-image'])),
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        blob: () => Promise.resolve(new Blob(['mock-ico'])),
-      })
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      blob: () => Promise.resolve(new Blob(['mock-ico'])),
+    })
 
     const result = await generatePremiumZip({
       formats: mockFormats,
-      sourceImage: mockSourceImage,
+      sourceImageBlob: mockSourceImageBlob,
       manifestOptions: mockManifestOptions,
       manifest: mockManifest,
       browserConfig: mockBrowserConfig,
@@ -352,18 +312,14 @@ describe('generatePremiumZip', () => {
   })
 
   it('README.md contains implementation guide', async () => {
-    mockFetch
-      .mockResolvedValueOnce({
-        blob: () => Promise.resolve(new Blob(['source-image'])),
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        blob: () => Promise.resolve(new Blob(['mock-ico'])),
-      })
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      blob: () => Promise.resolve(new Blob(['mock-ico'])),
+    })
 
     const result = await generatePremiumZip({
       formats: mockFormats,
-      sourceImage: mockSourceImage,
+      sourceImageBlob: mockSourceImageBlob,
       manifestOptions: mockManifestOptions,
       manifest: mockManifest,
       browserConfig: mockBrowserConfig,
@@ -378,17 +334,13 @@ describe('generatePremiumZip', () => {
   })
 
   it('handles ICO failure gracefully in premium', async () => {
-    mockFetch
-      .mockResolvedValueOnce({
-        blob: () => Promise.resolve(new Blob(['source-image'])),
-      })
-      .mockResolvedValueOnce({
-        ok: false,
-      })
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+    })
 
     const result = await generatePremiumZip({
       formats: mockFormats,
-      sourceImage: mockSourceImage,
+      sourceImageBlob: mockSourceImageBlob,
       manifestOptions: mockManifestOptions,
       manifest: mockManifest,
       browserConfig: mockBrowserConfig,

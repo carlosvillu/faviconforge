@@ -170,18 +170,18 @@ Antes de empezar, necesitas tener configurado:
 
 #### Task 3.2: Create download route and component
 
-- [ ] Register `/download` route in `app/routes.ts`
-- [ ] Create `app/routes/download.tsx` with loader (check sessionStorage, get user premium status if logged in)
-- [ ] Create `app/components/DownloadSection.tsx` - two-column layout (free vs premium)
-- [ ] Create `app/components/FreePackageCard.tsx` - shows free formats with download button
-- [ ] Create `app/components/PremiumPackageCard.tsx` - shows premium formats with lock/unlock state
-- [ ] Create `app/hooks/useDownload.ts` - handles ZIP generation and download trigger
-- [ ] Implement free download (always available, triggers immediately)
-- [ ] Show premium upsell for non-premium users
-- [ ] Add i18n keys for download UI (package contents, CTAs, premium pitch)
-- [ ] Run `npm run typecheck` and `npm run lint`
-- [ ] Write E2E test: anonymous user downloads free ZIP → ZIP contains correct files
-- [ ] Run `npm run test:e2e -- --retries=1` and verify tests pass
+- [x] Register `/download` route in `app/routes.ts`
+- [x] Create `app/routes/download.tsx` with loader (check sessionStorage, get user premium status if logged in)
+- [x] Create `app/components/DownloadSection.tsx` - two-column layout (free vs premium)
+- [x] Create `app/components/FreePackageCard.tsx` - shows free formats with download button
+- [x] Create `app/components/PremiumPackageCard.tsx` - shows premium formats with lock/unlock state
+- [x] Create `app/hooks/useDownload.ts` - handles ZIP generation and download trigger
+- [x] Implement free download (always available, triggers immediately)
+- [x] Show premium upsell for non-premium users
+- [x] Add i18n keys for download UI (package contents, CTAs, premium pitch)
+- [x] Run `npm run typecheck` and `npm run lint`
+- [x] Write E2E test: anonymous user downloads free ZIP → ZIP contains correct files
+- [x] Run `npm run test:e2e -- --retries=1` and verify tests pass
 
 ---
 

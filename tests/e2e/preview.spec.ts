@@ -1,17 +1,18 @@
 import { test, expect } from '../fixtures/app.fixture'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import { clearIndexedDB, waitForSourceImageInIDB } from './helpers/indexeddb'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
 test.describe('Preview Page', () => {
-  test('should redirect to /upload without image in sessionStorage', async ({
+  test('should redirect to /upload without image in IndexedDB', async ({
     page,
   }) => {
-    // Clear sessionStorage
+    // Clear IndexedDB
     await page.goto('/upload')
-    await page.evaluate(() => sessionStorage.clear())
+    await clearIndexedDB(page)
 
     // Navigate directly to /preview
     await page.goto('/preview')
@@ -179,7 +180,7 @@ test.describe('Preview Page', () => {
     expect(page.url()).toContain('/download')
   })
 
-  test('should preserve source image in sessionStorage', async ({
+  test('should preserve source image in IndexedDB', async ({
     page,
   }) => {
     // Upload and navigate to preview
@@ -197,24 +198,16 @@ test.describe('Preview Page', () => {
     await page.waitForURL('**/preview', { timeout: 5000 })
     await page.waitForTimeout(2000)
 
-    // Verify source image is in sessionStorage
-    const sessionData = await page.evaluate(() =>
-      sessionStorage.getItem('faviconforge_source_image')
-    )
-    expect(sessionData).toBeTruthy()
-    expect(sessionData).toContain('data:image/')
+    // Verify source image is in IndexedDB
+    await waitForSourceImageInIDB(page)
 
     // Go back to upload
     const backButton = page.getByRole('button', { name: /Back|Atras/i })
     await backButton.click()
     await page.waitForURL('**/upload', { timeout: 5000 })
 
-    // Verify source image is still in sessionStorage after navigation
-    const sessionDataAfterBack = await page.evaluate(() =>
-      sessionStorage.getItem('faviconforge_source_image')
-    )
-    expect(sessionDataAfterBack).toBeTruthy()
-    expect(sessionDataAfterBack).toEqual(sessionData)
+    // Verify source image is still in IndexedDB after navigation
+    await waitForSourceImageInIDB(page)
   })
 
   test('should show info box with correct content', async ({ page }) => {

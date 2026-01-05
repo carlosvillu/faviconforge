@@ -8,7 +8,7 @@ export type ZipResult = {
 
 export type FreeZipParams = {
   formats: FaviconFormat[]
-  sourceImage: string
+  sourceImageBlob: Blob
 }
 
 export type PremiumZipParams = FreeZipParams & {
