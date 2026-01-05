@@ -19,6 +19,7 @@ export const auth = betterAuth({
 
   trustedOrigins: [
     'https://faviconforge-app.netlify.app', // production
+    'https://faviconforge.cc/',
     'http://localhost:2025', // dev server
     'http://localhost:4000', // test worker 0
     'http://localhost:4001', // test worker 1
