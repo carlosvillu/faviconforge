@@ -1,6 +1,7 @@
 import { test, expect } from '../fixtures/app.fixture'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import { waitForSourceImageInIDB, clearIndexedDB } from './helpers/indexeddb'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -132,6 +133,9 @@ test.describe('Upload Page', () => {
   test('should store image and navigate on continue', async ({ page }) => {
     await page.goto('/upload')
 
+    // Clear IndexedDB before test
+    await clearIndexedDB(page)
+
     // Upload valid PNG
     const fileInput = await page.locator('input[type="file"]')
     const validImagePath = path.join(
@@ -153,12 +157,8 @@ test.describe('Upload Page', () => {
     // Verify we're on the preview page
     expect(page.url()).toContain('/preview')
 
-    // Verify sessionStorage has the image data
-    const sessionData = await page.evaluate(() =>
-      sessionStorage.getItem('faviconforge_source_image')
-    )
-    expect(sessionData).toBeTruthy()
-    expect(sessionData).toContain('data:image/')
+    // Verify IndexedDB has the image data
+    await waitForSourceImageInIDB(page)
   })
 
   test('should reset state when clicking Try Again', async ({ page }) => {

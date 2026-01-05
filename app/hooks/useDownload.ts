@@ -1,9 +1,7 @@
-import { useMemo, useState } from 'react'
+import { useState, useEffect } from 'react'
 import type { GeneratedFavicons } from '~/services/faviconGeneration.types'
-import {
-  getCachedFavicons,
-  restoreFaviconsFromCache,
-} from '~/services/faviconCache'
+import { useStorage } from '~/hooks/useStorage'
+import { restoreFaviconsFromCacheData } from '~/services/faviconCache'
 import { generateFreeZip, generatePremiumZip } from '~/services/zipGeneration'
 import { DEFAULT_MANIFEST_OPTIONS } from '~/services/faviconGeneration.types'
 import type { ZipResult } from '~/services/zipGeneration.types'
@@ -25,12 +23,13 @@ export type UseDownloadReturn = {
   triggerDownload: () => Promise<void>
   generateZip: () => Promise<ZipResult | null>
   canDownloadPremium: boolean
-  hasSourceImage: boolean
+  hasSourceImage: boolean | 'loading'
 }
 
 export function useDownload(params: UseDownloadParams): UseDownloadReturn {
   const { isPremium, isLoggedIn } = params
 
+  const storage = useStorage()
   const [selectedTier, setSelectedTier] = useState<'free' | 'premium'>(
     isPremium ? 'premium' : 'free'
   )
@@ -38,34 +37,61 @@ export function useDownload(params: UseDownloadParams): UseDownloadReturn {
   const [zipBlob, setZipBlob] = useState<Blob | null>(null)
   const [zipFilename, setZipFilename] = useState<string>('')
   const [warnings, setWarnings] = useState<string[]>([])
+  const [hasSourceImage, setHasSourceImage] = useState<boolean | 'loading'>('loading')
 
   const canDownloadPremium = isLoggedIn && isPremium
 
-  const hasSourceImage = useMemo(() => {
-    if (typeof window === 'undefined') return false
-    return getCachedFavicons() !== null
-  }, [])
+  useEffect(() => {
+    let cancelled = false
+
+    if (storage.state === 'loading') {
+      // Use timeout to avoid synchronous setState in effect
+      const timer = setTimeout(() => {
+        if (!cancelled) setHasSourceImage('loading')
+      }, 0)
+      return () => {
+        cancelled = true
+        clearTimeout(timer)
+      }
+    }
+
+    if (storage.state === 'error') {
+      const timer = setTimeout(() => {
+        if (!cancelled) setHasSourceImage(false)
+      }, 0)
+      return () => {
+        cancelled = true
+        clearTimeout(timer)
+      }
+    }
+
+    const checkCache = async () => {
+      const cached = await storage.getFaviconCache()
+      if (!cancelled) setHasSourceImage(cached !== null)
+    }
+    checkCache()
+
+    return () => {
+      cancelled = true
+    }
+  }, [storage, storage.state, storage.getFaviconCache])
 
   const generateZip = async (): Promise<ZipResult | null> => {
     try {
       setDownloadState('generating')
 
-      const cached = getCachedFavicons()
+      const cached = await storage.getFaviconCache()
       if (!cached) {
         setDownloadState('error')
         return null
       }
 
-      const restored = restoreFaviconsFromCache()
-      if (!restored) {
-        setDownloadState('error')
-        return null
-      }
+      const restored = restoreFaviconsFromCacheData(cached)
 
       const result = await generateZipForTier({
         selectedTier,
         generatedFavicons: restored,
-        sourceImage: cached.sourceImage,
+        sourceImageBlob: cached.sourceImage.blob,
       })
 
       setWarnings(result.warnings)
@@ -119,20 +145,20 @@ export function useDownload(params: UseDownloadParams): UseDownloadReturn {
 async function generateZipForTier(params: {
   selectedTier: 'free' | 'premium'
   generatedFavicons: GeneratedFavicons
-  sourceImage: string
+  sourceImageBlob: Blob
 }) {
-  const { selectedTier, generatedFavicons, sourceImage } = params
+  const { selectedTier, generatedFavicons, sourceImageBlob } = params
 
   if (selectedTier === 'free') {
     return generateFreeZip({
       formats: generatedFavicons.formats,
-      sourceImage,
+      sourceImageBlob,
     })
   }
 
   return generatePremiumZip({
     formats: generatedFavicons.formats,
-    sourceImage,
+    sourceImageBlob,
     manifest: generatedFavicons.manifest ?? '',
     browserConfig: generatedFavicons.browserConfig ?? '',
     manifestOptions: DEFAULT_MANIFEST_OPTIONS,

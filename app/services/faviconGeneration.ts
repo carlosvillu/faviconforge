@@ -15,15 +15,24 @@ import {
 // ============ LOW-LEVEL UTILITIES ============
 
 /**
- * Loads an image from a data URL
+ * Loads an image from a Blob
  */
-export function loadImage(dataUrl: string): Promise<HTMLImageElement> {
+export function loadImage(source: Blob): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image()
     img.crossOrigin = 'anonymous'
-    img.onload = () => resolve(img)
-    img.onerror = () => reject(new Error('image_load_failed'))
-    img.src = dataUrl
+
+    const objectUrl = URL.createObjectURL(source)
+
+    img.onload = () => {
+      URL.revokeObjectURL(objectUrl) // Clean up after load
+      resolve(img)
+    }
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl) // Clean up on error too
+      reject(new Error('image_load_failed'))
+    }
+    img.src = objectUrl
   })
 }
 
@@ -70,7 +79,7 @@ export function canvasToBlob(
  * Resizes an image to the specified size and returns a PNG Blob
  */
 export async function resizeImage(
-  imageData: string,
+  imageData: Blob,
   size: number
 ): Promise<Blob> {
   const img = await loadImage(imageData)
@@ -82,7 +91,7 @@ export async function resizeImage(
  * Generates a maskable icon with 80% content and background padding
  */
 export async function generateMaskableIcon(
-  imageData: string,
+  imageData: Blob,
   size: number,
   backgroundColor: string
 ): Promise<Blob> {
@@ -114,7 +123,7 @@ export async function generateMaskableIcon(
  * Generates all PNG formats based on tier
  */
 export async function generatePNGFormats(
-  imageData: string,
+  imageData: Blob,
   isPremium: boolean
 ): Promise<GenerationResult[]> {
   const sizes = isPremium
@@ -165,7 +174,7 @@ export async function generatePNGFormats(
  * Generates maskable icon formats (premium only)
  */
 export async function generateMaskableFormats(
-  imageData: string,
+  imageData: Blob,
   backgroundColor: string
 ): Promise<GenerationResult[]> {
   const sizeToFormat: Record<number, { name: string; path: string }> = {

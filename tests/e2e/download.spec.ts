@@ -1,6 +1,7 @@
 import { test, expect } from '../fixtures/app.fixture'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import { clearIndexedDB, waitForFaviconCacheInIDB } from './helpers/indexeddb'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -8,7 +9,7 @@ const __dirname = path.dirname(__filename)
 test.describe('Download Page', () => {
   test('should redirect to /upload without cached data', async ({ page }) => {
     await page.goto('/upload')
-    await page.evaluate(() => sessionStorage.clear())
+    await clearIndexedDB(page)
 
     await page.goto('/download')
 
@@ -34,10 +35,7 @@ test.describe('Download Page', () => {
     await page.waitForURL('**/preview', { timeout: 5000 })
     await page.waitForTimeout(2000)
 
-    await page.waitForFunction(
-      () => !!sessionStorage.getItem('faviconforge_favicon_cache'),
-      { timeout: 10000 }
-    )
+    await waitForFaviconCacheInIDB(page)
 
     // Navigate to download (this should have cached favicons)
     const downloadNavButton = page.getByRole('button', {
@@ -77,10 +75,7 @@ test.describe('Download Page', () => {
     await page.waitForURL('**/preview', { timeout: 5000 })
     await page.waitForTimeout(2000)
 
-    await page.waitForFunction(
-      () => !!sessionStorage.getItem('faviconforge_favicon_cache'),
-      { timeout: 10000 }
-    )
+    await waitForFaviconCacheInIDB(page)
 
     const navButton = page.getByRole('button', { name: /Download|Descargar/i })
     await navButton.click()
@@ -120,10 +115,7 @@ test.describe('Download Page', () => {
     await page.waitForURL('**/preview', { timeout: 5000 })
     await page.waitForTimeout(2000)
 
-    await page.waitForFunction(
-      () => !!sessionStorage.getItem('faviconforge_favicon_cache'),
-      { timeout: 10000 }
-    )
+    await waitForFaviconCacheInIDB(page)
 
     const navButton = page.getByRole('button', { name: /Download|Descargar/i })
     await navButton.click()
@@ -153,10 +145,7 @@ test.describe('Download Page', () => {
     await page.waitForURL('**/preview', { timeout: 5000 })
     await page.waitForTimeout(2000)
 
-    await page.waitForFunction(
-      () => !!sessionStorage.getItem('faviconforge_favicon_cache'),
-      { timeout: 10000 }
-    )
+    await waitForFaviconCacheInIDB(page)
 
     const navButton = page.getByRole('button', { name: /Download|Descargar/i })
     await navButton.click()

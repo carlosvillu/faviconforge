@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { generateAllFormats } from '~/services/faviconGeneration'
 import type { FaviconFormat } from '~/services/faviconGeneration.types'
-import { cacheFavicons } from '~/services/faviconCache'
+import { useStorage } from '~/hooks/useStorage'
+import { prepareFaviconCacheData } from '~/services/faviconCache'
 
-type GenerationState = 'idle' | 'generating' | 'complete' | 'error'
+type GenerationState = 'idle' | 'loading' | 'generating' | 'complete' | 'error'
 
 type GeneratedFormat = {
   name: string
@@ -16,43 +17,109 @@ export type UseFaviconGenerationReturn = {
   generationState: GenerationState
   formats: GeneratedFormat[]
   error: string | null
-  sourceImage: string | null
+  sourceImageUrl: string | null
   getFaviconUrl: (targetSize: number) => string | null
   retry: () => void
-  hasSourceImage: boolean
-}
-
-function getSourceImage(): string | null {
-  if (typeof window === 'undefined') return null
-  return sessionStorage.getItem('faviconforge_source_image')
+  hasSourceImage: boolean | 'loading'
 }
 
 export function useFaviconGeneration(): UseFaviconGenerationReturn {
-  const [generationState, setGenerationState] =
-    useState<GenerationState>('idle')
+  const storage = useStorage()
+  const [generationState, setGenerationState] = useState<GenerationState>('idle')
   const [formats, setFormats] = useState<GeneratedFormat[]>([])
   const [error, setError] = useState<string | null>(null)
-  const [sourceImage, setSourceImage] = useState<string | null>(null)
+  const [sourceImageUrl, setSourceImageUrl] = useState<string | null>(null)
+  const [hasSourceImage, setHasSourceImage] = useState<boolean | 'loading'>('loading')
+
+  // Track source metadata for caching
+  const sourceMetadataRef = useRef<{ filename: string; mimeType: string } | null>(null)
+
+  // Track if we've already started generation to avoid double-trigger
+  const generationStartedRef = useRef(false)
+
+  // Check for source image when storage is ready
+  useEffect(() => {
+    let cancelled = false
+
+    if (storage.state === 'loading') {
+      // Use timeout to avoid synchronous setState in effect
+      const timer = setTimeout(() => {
+        if (!cancelled) setHasSourceImage('loading')
+      }, 0)
+      return () => {
+        cancelled = true
+        clearTimeout(timer)
+      }
+    }
+
+    if (storage.state === 'error') {
+      const timer = setTimeout(() => {
+        if (!cancelled) {
+          setHasSourceImage(false)
+          setError('storage_not_available')
+        }
+      }, 0)
+      return () => {
+        cancelled = true
+        clearTimeout(timer)
+      }
+    }
+
+    // Storage is ready, check for source image
+    const checkSource = async () => {
+      const sourceData = await storage.getSourceImage()
+      if (!cancelled) setHasSourceImage(!!sourceData)
+    }
+    checkSource()
+
+    return () => {
+      cancelled = true
+    }
+  }, [storage, storage.state, storage.getSourceImage])
 
   const generateFavicons = async () => {
-    const source = getSourceImage()
-    if (!source) {
-      setError('no_source_image')
+    if (storage.state !== 'ready') {
+      setError('storage_not_available')
       return
     }
 
-    setSourceImage(source)
-    setGenerationState('generating')
+    setGenerationState('loading')
 
     try {
+      const sourceData = await storage.getSourceImage()
+      if (!sourceData) {
+        setError('no_source_image')
+        setGenerationState('error')
+        return
+      }
+
+      // Store metadata for caching later
+      sourceMetadataRef.current = {
+        filename: sourceData.filename,
+        mimeType: sourceData.mimeType,
+      }
+
+      // Create object URL for display
+      const displayUrl = URL.createObjectURL(sourceData.blob)
+      setSourceImageUrl(displayUrl)
+      setGenerationState('generating')
+
+      // Generate favicons with Blob directly
       const result = await generateAllFormats({
-        imageData: source,
+        imageData: sourceData.blob,
         isPremium: true,
       })
 
-      await cacheFavicons(result, source)
+      // Cache the result
+      const cacheData = prepareFaviconCacheData(
+        result,
+        sourceData.blob,
+        sourceData.filename,
+        sourceData.mimeType
+      )
+      await storage.setFaviconCache(cacheData)
 
-      // Convert blobs to object URLs
+      // Convert blobs to object URLs for display
       const formatsWithUrls = result.formats.map((format: FaviconFormat) => ({
         name: format.name,
         tier: format.tier,
@@ -63,25 +130,36 @@ export function useFaviconGeneration(): UseFaviconGenerationReturn {
       setFormats(formatsWithUrls)
       setGenerationState('complete')
     } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : 'Unknown error'
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error'
       setError(errorMessage)
       setGenerationState('error')
     }
   }
 
-  // Generate on mount
+  // Generate on mount when storage is ready
   useEffect(() => {
-    generateFavicons()
+    if (storage.state === 'ready' && generationState === 'idle' && !generationStartedRef.current) {
+      generationStartedRef.current = true
+      // Use timeout to avoid synchronous setState in effect
+      const timer = setTimeout(() => {
+        generateFavicons()
+      }, 0)
+      return () => clearTimeout(timer)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storage.state, generationState])
 
-    // Cleanup: Revoke object URLs to prevent memory leaks
+  // Cleanup: Revoke object URLs to prevent memory leaks
+  useEffect(() => {
     return () => {
+      if (sourceImageUrl) {
+        URL.revokeObjectURL(sourceImageUrl)
+      }
       formats.forEach((format) => {
         URL.revokeObjectURL(format.blobUrl)
       })
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [sourceImageUrl, formats])
 
   const getFaviconUrl = (targetSize: number): string | null => {
     const format = formats.find((f) => f.size === targetSize)
@@ -89,18 +167,25 @@ export function useFaviconGeneration(): UseFaviconGenerationReturn {
   }
 
   const retry = () => {
+    // Revoke old URLs before retry
+    formats.forEach((format) => URL.revokeObjectURL(format.blobUrl))
+    if (sourceImageUrl) URL.revokeObjectURL(sourceImageUrl)
+
     setFormats([])
     setError(null)
-    generateFavicons()
+    setSourceImageUrl(null)
+    setGenerationState('idle')
+    generationStartedRef.current = false
+    // Will trigger generation via useEffect
   }
 
   return {
     generationState,
     formats,
     error,
-    sourceImage,
+    sourceImageUrl,
     getFaviconUrl,
     retry,
-    hasSourceImage: !!getSourceImage(),
+    hasSourceImage,
   }
 }

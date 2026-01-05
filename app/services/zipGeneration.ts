@@ -8,14 +8,10 @@ import type { FaviconFormat } from './faviconGeneration.types'
 
 // === INTERNAL HELPERS ===
 
-async function fetchICOFromAPI(sourceImage: string): Promise<Blob | null> {
+async function fetchICOFromAPI(sourceImageBlob: Blob): Promise<Blob | null> {
   try {
-    // Convert base64/dataURL to Blob for FormData
-    const response = await fetch(sourceImage)
-    const blob = await response.blob()
-
     const formData = new FormData()
-    formData.append('file', blob, 'favicon.png')
+    formData.append('file', sourceImageBlob, 'favicon.png')
 
     const icoResponse = await fetch('/api/favicon/ico', {
       method: 'POST',
@@ -162,12 +158,12 @@ function determineFilePath(format: FaviconFormat): string {
 export async function generateFreeZip(
   params: FreeZipParams,
 ): Promise<ZipResult> {
-  const { formats, sourceImage } = params
+  const { formats, sourceImageBlob } = params
   const zip = new JSZip()
   const warnings: string[] = []
 
   // 1. Fetch ICO from API
-  const icoBlob = await fetchICOFromAPI(sourceImage)
+  const icoBlob = await fetchICOFromAPI(sourceImageBlob)
   if (icoBlob) {
     zip.file('web/favicon.ico', icoBlob)
   } else {
@@ -197,12 +193,12 @@ export async function generateFreeZip(
 export async function generatePremiumZip(
   params: PremiumZipParams,
 ): Promise<ZipResult> {
-  const { formats, sourceImage, manifest, browserConfig } = params
+  const { formats, sourceImageBlob, manifest, browserConfig } = params
   const zip = new JSZip()
   const warnings: string[] = []
 
   // 1. Fetch ICO from API
-  const icoBlob = await fetchICOFromAPI(sourceImage)
+  const icoBlob = await fetchICOFromAPI(sourceImageBlob)
   if (icoBlob) {
     zip.file('web/favicon.ico', icoBlob)
   } else {

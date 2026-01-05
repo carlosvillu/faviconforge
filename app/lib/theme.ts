@@ -70,8 +70,9 @@ export function getThemeInitScript(): string {
 
         var preference = cookies.theme;
 
-        // If no preference or system, detect from browser
-        if (!preference || preference === 'system') {
+        // If no preference, default to light (don't add dark class)
+        // If system preference, detect from browser
+        if (preference === 'system') {
           var isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
           if (isDark) {
             document.documentElement.classList.add('dark');

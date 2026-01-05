@@ -30,11 +30,11 @@
   "or_divider": "o",
   "loading": "Cargando...",
 
-  "hero_title": "Bienvenido a [PROJECT_NAME]",
+  "hero_title": "Bienvenido a FaviconForge",
   "hero_description": "La descripción de tu proyecto va aquí",
   "hero_cta": "Comenzar",
 
-  "footer_copyright": "© 2025 [PROJECT_NAME]",
+  "footer_copyright": "© 2026 FaviconForge",
 
   "theme_light": "Claro",
   "theme_dark": "Oscuro",
@@ -55,6 +55,10 @@
   "image_too_small": "La imagen es demasiado pequeña. Tamaño mínimo: {{minSize}}x{{minSize}} píxeles",
   "image_not_square": "La imagen debe ser cuadrada (mismo ancho y alto)",
   "image_load_error": "Error al cargar la imagen. Por favor, intenta con otro archivo.",
+
+  "storage_error": "Error al guardar la imagen. Por favor, intentalo de nuevo.",
+  "storage_quota_exceeded": "Imagen demasiado grande para el almacenamiento del navegador. Por favor, usa una imagen mas pequena o limpia la cache del navegador.",
+  "storage_not_available": "Almacenamiento del navegador no disponible. Por favor, verifica la configuracion de privacidad o prueba con otro navegador.",
 
   "upload_title_line1": "Sube Tu",
   "upload_title_line2": "Imagen",

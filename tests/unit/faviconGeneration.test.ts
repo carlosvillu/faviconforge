@@ -33,6 +33,10 @@ beforeEach(() => {
     callback(new Blob(['fake'], { type: 'image/png' }))
   }) as unknown as typeof HTMLCanvasElement.prototype.toBlob
 
+  // Mock URL.createObjectURL and URL.revokeObjectURL
+  global.URL.createObjectURL = vi.fn(() => 'blob:mock-url')
+  global.URL.revokeObjectURL = vi.fn()
+
   // Mock Image class
   global.Image = class {
     onload: (() => void) | null = null
@@ -49,17 +53,20 @@ beforeEach(() => {
 })
 
 describe('faviconGeneration', () => {
-  const validDataUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
+  // Create a mock Blob for testing
+  const validBlob = new Blob(['mock-image-data'], { type: 'image/png' })
 
   describe('loadImage', () => {
-    it('should load valid data URL', async () => {
-      const img = await loadImage(validDataUrl)
+    it('should load valid Blob', async () => {
+      const img = await loadImage(validBlob)
       expect(img).toBeInstanceOf(Image)
       expect(img.naturalWidth).toBe(512)
       expect(img.naturalHeight).toBe(512)
+      expect(global.URL.createObjectURL).toHaveBeenCalledWith(validBlob)
+      expect(global.URL.revokeObjectURL).toHaveBeenCalledWith('blob:mock-url')
     })
 
-    it('should reject invalid data URL', async () => {
+    it('should reject invalid Blob', async () => {
       // Override Image to trigger onerror
       global.Image = class {
         onload: (() => void) | null = null
@@ -72,13 +79,14 @@ describe('faviconGeneration', () => {
         }
       } as unknown as typeof Image
 
-      await expect(loadImage('invalid')).rejects.toThrow('image_load_failed')
+      const invalidBlob = new Blob(['invalid'], { type: 'image/png' })
+      await expect(loadImage(invalidBlob)).rejects.toThrow('image_load_failed')
     })
   })
 
   describe('resizeToCanvas', () => {
     it('should create correct size canvas', async () => {
-      const img = await loadImage(validDataUrl)
+      const img = await loadImage(validBlob)
       const canvas = resizeToCanvas(img, 32)
 
       expect(canvas.width).toBe(32)
@@ -108,7 +116,7 @@ describe('faviconGeneration', () => {
 
   describe('resizeImage', () => {
     it('should return blob of correct approximate size', async () => {
-      const blob = await resizeImage(validDataUrl, 16)
+      const blob = await resizeImage(validBlob, 16)
 
       expect(blob).toBeInstanceOf(Blob)
       expect(blob.type).toBe('image/png')
@@ -117,7 +125,7 @@ describe('faviconGeneration', () => {
 
   describe('generateMaskableIcon', () => {
     it('should add padding with background color', async () => {
-      const blob = await generateMaskableIcon(validDataUrl, 192, '#ff0000')
+      const blob = await generateMaskableIcon(validBlob, 192, '#ff0000')
 
       expect(blob).toBeInstanceOf(Blob)
       expect(mockContext.fillStyle).toBe('#ff0000')
@@ -135,7 +143,7 @@ describe('faviconGeneration', () => {
 
   describe('generatePNGFormats', () => {
     it('should generate free formats only', async () => {
-      const results = await generatePNGFormats(validDataUrl, false)
+      const results = await generatePNGFormats(validBlob, false)
 
       expect(results).toHaveLength(3)
       const successResults = results.filter((r) => r.success)
@@ -153,7 +161,7 @@ describe('faviconGeneration', () => {
     })
 
     it('should generate all formats for premium', async () => {
-      const results = await generatePNGFormats(validDataUrl, true)
+      const results = await generatePNGFormats(validBlob, true)
 
       expect(results).toHaveLength(7)
       const successResults = results.filter((r) => r.success)
@@ -169,7 +177,7 @@ describe('faviconGeneration', () => {
 
   describe('generateMaskableFormats', () => {
     it('should generate maskable icons for both sizes', async () => {
-      const results = await generateMaskableFormats(validDataUrl, '#ffffff')
+      const results = await generateMaskableFormats(validBlob, '#ffffff')
 
       expect(results).toHaveLength(2)
       const successResults = results.filter((r) => r.success)
@@ -247,7 +255,7 @@ describe('faviconGeneration', () => {
   describe('generateAllFormats', () => {
     it('should return all formats for premium with manifest', async () => {
       const result = await generateAllFormats({
-        imageData: validDataUrl,
+        imageData: validBlob,
         isPremium: true,
         manifestOptions: {
           name: 'My App',
@@ -265,7 +273,7 @@ describe('faviconGeneration', () => {
 
     it('should return only free formats without manifest for free tier', async () => {
       const result = await generateAllFormats({
-        imageData: validDataUrl,
+        imageData: validBlob,
         isPremium: false,
       })
 
@@ -288,7 +296,7 @@ describe('faviconGeneration', () => {
       }) as unknown as typeof HTMLCanvasElement.prototype.toBlob
 
       const result = await generateAllFormats({
-        imageData: validDataUrl,
+        imageData: validBlob,
         isPremium: false,
       })
 

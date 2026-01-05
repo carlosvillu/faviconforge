@@ -28,7 +28,7 @@ export type GeneratedFavicons = {
 }
 
 export type FaviconGenerationOptions = {
-  imageData: string         // base64 or data URL
+  imageData: Blob
   isPremium: boolean
   manifestOptions?: ManifestOptions
 }

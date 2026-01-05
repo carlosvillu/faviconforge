@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router'
 import { validateImage } from '~/services/imageValidation'
+import { useStorage } from '~/hooks/useStorage'
 
 type UploadState = 'idle' | 'validating' | 'success' | 'error'
 
@@ -11,11 +12,13 @@ type ValidationError = {
 
 export function useImageUpload() {
   const navigate = useNavigate()
+  const storage = useStorage()
   const [file, setFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [validationError, setValidationError] = useState<ValidationError | null>(null)
   const [isValidating, setIsValidating] = useState(false)
   const [isValid, setIsValid] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
 
   const handleFileDrop = async (acceptedFiles: File[]) => {
     const uploadedFile = acceptedFiles[0]
@@ -49,14 +52,30 @@ export function useImageUpload() {
   const handleContinue = async () => {
     if (!file) return
 
-    // Read file as base64
-    const reader = new FileReader()
-    reader.onload = () => {
-      const base64 = reader.result as string
-      sessionStorage.setItem('faviconforge_source_image', base64)
-      navigate('/preview')
+    // Check storage is ready
+    if (storage.state !== 'ready') {
+      setValidationError({
+        errorKey: 'storage_not_available',
+      })
+      return
     }
-    reader.readAsDataURL(file)
+
+    setIsSaving(true)
+
+    try {
+      // Store Blob directly (no base64 conversion)
+      await storage.setSourceImage(file, file.name, file.type)
+      navigate('/preview')
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'storage_error'
+      setValidationError({
+        errorKey: errorMessage === 'storage_quota_exceeded'
+          ? 'storage_quota_exceeded'
+          : 'storage_error',
+      })
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   const clearFile = () => {
@@ -94,6 +113,8 @@ export function useImageUpload() {
     validationError,
     isValidating,
     isValid,
+    isSaving,
+    storageReady: storage.state === 'ready',
     state,
     handleFileDrop,
     handleContinue,
