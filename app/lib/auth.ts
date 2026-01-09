@@ -34,8 +34,7 @@ export const auth = betterAuth({
   ],
 
   emailAndPassword: {
-    enabled: true,
-    requireEmailVerification: false,
+    enabled: !!process.env.DB_TEST_URL, // Enable in test environment
   },
 
   socialProviders: {

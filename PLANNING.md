@@ -192,13 +192,13 @@ Antes de empezar, necesitas tener configurado:
 
 #### Task 4.1: Configure Google-only authentication
 
-- [ ] Update `app/lib/auth.ts` to make Google the only OAuth provider visible in UI
-- [ ] Remove email/password signup option from UI (keep backend for existing users if any)
-- [ ] Update `app/routes/auth.login.tsx` to show only Google button
-- [ ] Update `app/routes/auth.signup.tsx` to show only Google button (or merge with login)
-- [ ] Update header to show "Sign in with Google" when logged out
-- [ ] Update i18n keys for Google-only auth
-- [ ] Run `npm run typecheck` and `npm run lint`
+- [x] Update `app/lib/auth.ts` to make Google the only OAuth provider visible in UI
+- [x] Remove email/password signup option from UI (keep backend for existing users if any)
+- [x] Update `app/routes/auth.login.tsx` to show only Google button
+- [x] Update `app/routes/auth.signup.tsx` to show only Google button (or merge with login)
+- [x] Update header to show "Sign in with Google" when logged out
+- [x] Update i18n keys for Google-only auth
+- [x] Run `npm run typecheck` and `npm run lint`
 
 #### Task 4.2: Integrate premium status with auth
 
@@ -459,7 +459,7 @@ Sequential list of all tasks in recommended order:
 | 2     | 2.3  | ✅ Complete    | Preview route       |
 | 3     | 3.1  | ⬜ Not Started | ZIP service         |
 | 3     | 3.2  | ⬜ Not Started | Download route      |
-| 4     | 4.1  | ⬜ Not Started | Google-only auth    |
+| 4     | 4.1  | ✅ Complete    | Google-only auth    |
 | 4     | 4.2  | ⬜ Not Started | Premium integration |
 | 5     | 5.1  | ⬜ Not Started | Stripe checkout     |
 | 5     | 5.2  | ⬜ Not Started | Stripe webhook      |
