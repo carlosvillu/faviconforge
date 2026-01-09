@@ -6,16 +6,20 @@ type DownloadActionBarProps = {
   selectedTier: 'free' | 'premium'
   downloadState: 'idle' | 'generating' | 'ready' | 'error'
   onDownload: () => Promise<void>
+  onBuyPremium?: () => void
   isPremium: boolean
   isLoggedIn: boolean
+  isCheckoutLoading?: boolean
 }
 
 export function DownloadActionBar({
   selectedTier,
   downloadState,
   onDownload,
+  onBuyPremium,
   isPremium,
   isLoggedIn,
+  isCheckoutLoading = false,
 }: DownloadActionBarProps) {
   const { t } = useTranslation()
 
@@ -77,12 +81,17 @@ export function DownloadActionBar({
           {showBuyButton && (
             <button
               type="button"
-              disabled
-              className="bg-black text-yellow-300 px-12 py-6 font-black uppercase text-xl border-4 border-black rounded-none opacity-70"
+              onClick={onBuyPremium}
+              disabled={isCheckoutLoading}
+              className="bg-black text-yellow-300 px-12 py-6 font-black uppercase text-xl border-4 border-black rounded-none hover:bg-white hover:text-black transition-all hover:scale-105 disabled:opacity-70 disabled:hover:scale-100 disabled:hover:bg-black disabled:hover:text-yellow-300"
             >
               <div className="flex flex-col items-center">
-                <span>{t('download_buy_cta')}</span>
-                <span className="text-xs font-bold mt-1">{t('download_buy_subtitle')}</span>
+                <span>
+                  {isCheckoutLoading ? t('checkout_redirecting') : t('download_buy_cta')}
+                </span>
+                {!isCheckoutLoading && (
+                  <span className="text-xs font-bold mt-1">{t('download_buy_subtitle')}</span>
+                )}
               </div>
             </button>
           )}

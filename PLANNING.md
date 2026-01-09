@@ -242,12 +242,12 @@ Antes de empezar, necesitas tener configurado:
 
 #### Task 5.3: Create checkout flow UI
 
-- [ ] Update `PremiumPackageCard.tsx` to trigger checkout API on "Buy Premium" click
-- [ ] Add loading state while creating checkout session
-- [ ] Redirect to Stripe Checkout on success
-- [ ] Handle errors gracefully with user-friendly messages
-- [ ] Add i18n keys for checkout flow
-- [ ] Run `npm run typecheck` and `npm run lint`
+- [x] Update `PremiumPackageCard.tsx` to trigger checkout API on "Buy Premium" click
+- [x] Add loading state while creating checkout session
+- [x] Redirect to Stripe Checkout on success
+- [x] Handle errors gracefully with user-friendly messages
+- [x] Add i18n keys for checkout flow
+- [x] Run `npm run typecheck` and `npm run lint`
 
 #### Task 5.4: Create success page
 
@@ -460,20 +460,11 @@ Sequential list of all tasks in recommended order:
 | 3     | 3.1  | ✅ Complete    | ZIP service         |
 | 3     | 3.2  | ✅ Complete    | Download route      |
 | 4     | 4.1  | ✅ Complete    | Google-only auth    |
-| 4     | 4.2  | ⬜ Not Started | Premium integration |
+| 4     | 4.2  | ✅ Complete    | Premium integration |
 | 5     | 5.1  | ✅ Complete    | Stripe checkout     |
 | 5     | 5.2  | ✅ Complete    | Stripe webhook      |
-| 5     | 5.3  | ⬜ Not Started | Checkout UI         |
+| 5     | 5.3  | ✅ Complete    | Checkout UI         |
 | 5     | 5.4  | ⬜ Not Started | Success page        |
-| 6     | 6.1  | ⬜ Not Started | Manifest customizer |
-| 7     | 7.1  | ⬜ Not Started | Contact form        |
-| 8     | 8.1  | ⬜ Not Started | Terms page          |
-| 8     | 8.2  | ⬜ Not Started | Privacy page        |
-| 9     | 9.1  | ⬜ Not Started | GA4 setup           |
-| 9     | 9.2  | ⬜ Not Started | Event tracking      |
-| 10    | 10.1 | ⬜ Not Started | Accessibility       |
-| 10    | 10.2 | ⬜ Not Started | Mobile polish       |
-| 10    | 10.3 | ⬜ Not Started | Error handling      |
 
 **Status Legend:** ⬜ Not Started | 🔄 In Progress | ✅ Complete | ⏸️ Blocked
 

@@ -2,12 +2,14 @@ import { useEffect } from 'react'
 import type { LoaderFunctionArgs } from 'react-router'
 import { useLoaderData, useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
+import { toast } from 'sonner'
 import { getCurrentUser } from '~/lib/auth.server'
 import type { User } from '~/lib/auth'
 import { getPremiumStatus } from '~/services/premium.server'
 import { useHeaderStep } from '~/contexts/HeaderStepContext'
 import { UploadProgressBar } from '~/components/upload'
 import { useDownload } from '~/hooks/useDownload'
+import { useCheckout } from '~/hooks/useCheckout'
 import { DownloadSection } from '~/components/download/DownloadSection'
 import { FreePackageCard } from '~/components/download/FreePackageCard'
 import { PremiumPackageCard } from '~/components/download/PremiumPackageCard'
@@ -54,6 +56,14 @@ export default function DownloadPage() {
     isLoggedIn: !!user,
   })
 
+  const checkout = useCheckout()
+
+  useEffect(() => {
+    if (checkout.error) {
+      toast.error(t('checkout_error_generic'))
+    }
+  }, [checkout.error, t])
+
   useEffect(() => {
     setStep({ current: 3, total: 3, label: t('download_step_label') })
     return () => setStep(null)
@@ -99,8 +109,10 @@ export default function DownloadPage() {
           selectedTier={download.selectedTier}
           downloadState={download.downloadState}
           onDownload={download.triggerDownload}
+          onBuyPremium={checkout.startCheckout}
           isPremium={isPremium}
           isLoggedIn={!!user}
+          isCheckoutLoading={checkout.isLoading}
         />
 
         {download.warnings.length > 0 && <WarningBanner warnings={download.warnings} />}

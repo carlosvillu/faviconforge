@@ -26,21 +26,16 @@
   "no_account_prompt": "¿No tienes una cuenta?",
   "login_link": "Inicia sesión",
   "signup_link": "Regístrate",
-
   "or_divider": "o",
   "loading": "Cargando...",
-
   "hero_title": "Bienvenido a FaviconForge",
   "hero_description": "La descripción de tu proyecto va aquí",
   "hero_cta": "Comenzar",
-
   "footer_copyright": "© 2026 FaviconForge",
-
   "theme_light": "Claro",
   "theme_dark": "Oscuro",
   "theme_system": "Sistema",
   "theme_label": "Tema",
-
   "premium_user": "Usuario Premium",
   "not_premium": "Usuario Gratuito",
   "premium_since": "Premium desde {{date}}",
@@ -49,17 +44,14 @@
   "premium_price": "€5 pago único",
   "premium_benefits_title": "Beneficios Premium",
   "premium_benefits_description": "Obtén todos los formatos de favicon incluyendo PWA, iconos Apple Touch, tiles de Windows y personalización del manifest.",
-
   "image_invalid_format": "Formato de imagen no válido. Permitidos: {{formats}}",
   "image_file_too_large": "El archivo es demasiado grande. Tamaño máximo: {{maxSizeMB}}MB",
   "image_too_small": "La imagen es demasiado pequeña. Tamaño mínimo: {{minSize}}x{{minSize}} píxeles",
   "image_not_square": "La imagen debe ser cuadrada (mismo ancho y alto)",
   "image_load_error": "Error al cargar la imagen. Por favor, intenta con otro archivo.",
-
   "storage_error": "Error al guardar la imagen. Por favor, intentalo de nuevo.",
   "storage_quota_exceeded": "Imagen demasiado grande para el almacenamiento del navegador. Por favor, usa una imagen mas pequena o limpia la cache del navegador.",
   "storage_not_available": "Almacenamiento del navegador no disponible. Por favor, verifica la configuracion de privacidad o prueba con otro navegador.",
-
   "upload_title_line1": "Sube Tu",
   "upload_title_line2": "Imagen",
   "upload_subtitle": "Solo imagenes cuadradas. Minimo 512x512px. Max 10MB.",
@@ -80,7 +72,6 @@
   "upload_req_min_size": "Minimo 512×512 pixeles",
   "upload_req_max_file": "Tamano maximo 10MB",
   "upload_req_format": "Formato PNG, JPEG, WebP o SVG",
-
   "landing_hero_line1": "Genera",
   "landing_hero_line2": "TODOS",
   "landing_hero_line3": "los Favicon",
@@ -132,7 +123,6 @@
   "landing_footer_contact": "Contacto",
   "landing_footer_support": "Soporte",
   "landing_footer_copyright": "© 2025 FAVICONFORGE * HECHO CON CAFE Y CODIGO",
-
   "preview_title_line1": "Vista Previa de Tus",
   "preview_title_line2": "Favicons",
   "preview_subtitle": "Ve como se ve tu favicon en diferentes plataformas y contextos.",
@@ -157,7 +147,6 @@
   "preview_error": "Error al generar favicons. Por favor, intentalo de nuevo.",
   "preview_retry": "Reintentar",
   "preview_no_image": "No se encontro imagen. Por favor, sube una imagen primero.",
-
   "download_step_label": "DESCARGA",
   "download_title_line1": "Elige Tu",
   "download_title_line2": "Paquete",
@@ -198,5 +187,7 @@
   "download_generating": "Generando ZIP...",
   "download_warning_title": "Advertencia",
   "download_warning_ico_generation_failed": "Generacion de ICO fallo. El ZIP solo contiene archivos PNG.",
-  "download_back_preview": "Volver a Vista Previa"
+  "download_back_preview": "Volver a Vista Previa",
+  "checkout_redirecting": "Redirigiendo a Stripe...",
+  "checkout_error_generic": "Error al iniciar el pago. Por favor intenta de nuevo."
 }

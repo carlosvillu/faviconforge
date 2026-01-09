@@ -26,21 +26,16 @@
   "no_account_prompt": "Don't have an account?",
   "login_link": "Log in",
   "signup_link": "Sign up",
-
   "or_divider": "or",
   "loading": "Loading...",
-
   "hero_title": "Welcome to FaviconForge",
   "hero_description": "Your project description goes here",
   "hero_cta": "Get started",
-
   "footer_copyright": "© 2026 FaviconForge",
-
   "theme_light": "Light",
   "theme_dark": "Dark",
   "theme_system": "System",
   "theme_label": "Theme",
-
   "premium_user": "Premium User",
   "not_premium": "Free User",
   "premium_since": "Premium since {{date}}",
@@ -49,17 +44,14 @@
   "premium_price": "€5 one-time",
   "premium_benefits_title": "Premium Benefits",
   "premium_benefits_description": "Get all favicon formats including PWA, Apple Touch icons, Windows tiles, and manifest customization.",
-
   "image_invalid_format": "Invalid image format. Allowed: {{formats}}",
   "image_file_too_large": "File is too large. Maximum size: {{maxSizeMB}}MB",
   "image_too_small": "Image is too small. Minimum size: {{minSize}}x{{minSize}} pixels",
   "image_not_square": "Image must be square (same width and height)",
   "image_load_error": "Failed to load image. Please try another file.",
-
   "storage_error": "Failed to save image. Please try again.",
   "storage_quota_exceeded": "Image too large for browser storage. Please use a smaller image or clear your browser cache.",
   "storage_not_available": "Browser storage not available. Please check privacy settings or try a different browser.",
-
   "upload_title_line1": "Upload Your",
   "upload_title_line2": "Image",
   "upload_subtitle": "Square images only. Minimum 512x512px. Max 10MB.",
@@ -80,7 +72,6 @@
   "upload_req_min_size": "Minimum 512×512 pixels",
   "upload_req_max_file": "Maximum 10MB file size",
   "upload_req_format": "PNG, JPEG, WebP or SVG format",
-
   "landing_hero_line1": "Generate",
   "landing_hero_line2": "ALL",
   "landing_hero_line3": "Favicon",
@@ -132,7 +123,6 @@
   "landing_footer_contact": "Contact",
   "landing_footer_support": "Support",
   "landing_footer_copyright": "© 2025 FAVICONFORGE * MADE WITH COFFEE AND CODE",
-
   "preview_title_line1": "Preview Your",
   "preview_title_line2": "Favicons",
   "preview_subtitle": "See how your favicon looks across different platforms and contexts.",
@@ -157,7 +147,6 @@
   "preview_error": "Error generating favicons. Please try again.",
   "preview_retry": "Retry",
   "preview_no_image": "No image found. Please upload an image first.",
-
   "download_step_label": "DOWNLOAD",
   "download_title_line1": "Choose Your",
   "download_title_line2": "Package",
@@ -198,5 +187,7 @@
   "download_generating": "Generating ZIP...",
   "download_warning_title": "Warning",
   "download_warning_ico_generation_failed": "ICO generation failed. ZIP contains PNG files only.",
-  "download_back_preview": "Back to Preview"
+  "download_back_preview": "Back to Preview",
+  "checkout_redirecting": "Redirecting to Stripe...",
+  "checkout_error_generic": "Error starting checkout. Please try again."
 }
