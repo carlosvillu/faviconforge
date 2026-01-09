@@ -202,16 +202,16 @@ Antes de empezar, necesitas tener configurado:
 
 #### Task 4.2: Integrate premium status with auth
 
-- [ ] Update `app/routes/download.tsx` loader to fetch premium status for logged-in users
-- [ ] Create `app/context/PremiumContext.tsx` to cache premium status client-side
-- [ ] Update `PremiumPackageCard.tsx` to show different states:
+- [x] Update `app/routes/download.tsx` loader to fetch premium status for logged-in users
+- [x] Create `app/context/PremiumContext.tsx` to cache premium status client-side
+- [x] Update `PremiumPackageCard.tsx` to show different states:
   - Not logged in: "Sign in with Google to buy premium"
   - Logged in, not premium: "Buy Premium - €5"
   - Premium: Download button enabled
-- [ ] Update i18n keys for premium states
-- [ ] Run `npm run typecheck` and `npm run lint`
-- [ ] Write E2E test: login with Google (mocked) → premium status reflected in UI
-- [ ] Run `npm run test:e2e -- --retries=1` and verify tests pass
+- [x] Update i18n keys for premium states
+- [x] Run `npm run typecheck` and `npm run lint`
+- [x] Write E2E test: login with Google (mocked) → premium status reflected in UI
+- [x] Run `npm run test:e2e -- --retries=1` and verify tests pass
 
 ---
 
@@ -222,13 +222,13 @@ Antes de empezar, necesitas tener configurado:
 
 #### Task 5.1: Create Stripe checkout endpoint
 
-- [ ] Install `stripe` and `@stripe/stripe-js` packages
-- [ ] Create `app/services/stripe.server.ts` with Stripe client initialization
-- [ ] Create `app/routes/api.stripe.checkout.ts` - POST endpoint to create checkout session
-- [ ] Validate user is authenticated before creating checkout
-- [ ] Include user ID in checkout session metadata for webhook
-- [ ] Configure success and cancel URLs
-- [ ] Run `npm run typecheck` and `npm run lint`
+- [x] Install `stripe` and `@stripe/stripe-js` packages
+- [x] Create `app/services/stripe.server.ts` with Stripe client initialization
+- [x] Create `app/routes/api.stripe.checkout.ts` - POST endpoint to create checkout session
+- [x] Validate user is authenticated before creating checkout
+- [x] Include user ID in checkout session metadata for webhook
+- [x] Configure success and cancel URLs
+- [x] Run `npm run typecheck` and `npm run lint`
 
 #### Task 5.2: Create Stripe webhook handler
 
@@ -457,11 +457,11 @@ Sequential list of all tasks in recommended order:
 | 2     | 2.1  | ✅ Complete    | Dependencies        |
 | 2     | 2.2  | ✅ Complete    | Favicon service     |
 | 2     | 2.3  | ✅ Complete    | Preview route       |
-| 3     | 3.1  | ⬜ Not Started | ZIP service         |
-| 3     | 3.2  | ⬜ Not Started | Download route      |
+| 3     | 3.1  | ✅ Complete    | ZIP service         |
+| 3     | 3.2  | ✅ Complete    | Download route      |
 | 4     | 4.1  | ✅ Complete    | Google-only auth    |
 | 4     | 4.2  | ⬜ Not Started | Premium integration |
-| 5     | 5.1  | ⬜ Not Started | Stripe checkout     |
+| 5     | 5.1  | ✅ Complete    | Stripe checkout     |
 | 5     | 5.2  | ⬜ Not Started | Stripe webhook      |
 | 5     | 5.3  | ⬜ Not Started | Checkout UI         |
 | 5     | 5.4  | ⬜ Not Started | Success page        |

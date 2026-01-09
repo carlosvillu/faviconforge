@@ -11,4 +11,5 @@ export default [
   route('upload', 'routes/upload.tsx'),
   route('preview', 'routes/preview.tsx'),
   route('download', 'routes/download.tsx'),
+  route('api/stripe/checkout', 'routes/api.stripe.checkout.tsx'),
 ] satisfies RouteConfig
