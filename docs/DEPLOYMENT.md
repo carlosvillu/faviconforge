@@ -9,6 +9,10 @@
 - `BETTER_AUTH_URL` - Production URL (e.g., `https://your-app.com`)
 - `GOOGLE_CLIENT_ID` - Google OAuth Client ID (optional, if using Google OAuth)
 - `GOOGLE_CLIENT_SECRET` - Google OAuth Client Secret (optional, if using Google OAuth)
+- `STRIPE_SECRET_KEY` - Stripe Secret Key
+- `STRIPE_PUBLISHABLE_KEY` - Stripe Publishable Key
+- `STRIPE_WEBHOOK_SECRET` - Stripe Webhook Signing Secret
+- `STRIPE_PRICE_ID` - Stripe Price ID for the Premium product
 
 ## Deploy Commands
 

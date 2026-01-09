@@ -12,4 +12,5 @@ export default [
   route('preview', 'routes/preview.tsx'),
   route('download', 'routes/download.tsx'),
   route('api/stripe/checkout', 'routes/api.stripe.checkout.tsx'),
+  route('api/stripe/webhook', 'routes/api.stripe.webhook.ts'),
 ] satisfies RouteConfig

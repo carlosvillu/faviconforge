@@ -232,13 +232,13 @@ Antes de empezar, necesitas tener configurado:
 
 #### Task 5.2: Create Stripe webhook handler
 
-- [ ] Create `app/routes/api.stripe.webhook.ts` - POST endpoint to receive Stripe events
-- [ ] Verify webhook signature with `STRIPE_WEBHOOK_SECRET`
-- [ ] Handle `checkout.session.completed` event
-- [ ] Extract user ID from session metadata
-- [ ] Call `grantPremium(userId, stripeCustomerId)` to update database
-- [ ] Handle idempotency (duplicate webhooks)
-- [ ] Run `npm run typecheck` and `npm run lint`
+- [x] Create `app/routes/api.stripe.webhook.ts` - POST endpoint to receive Stripe events
+- [x] Verify webhook signature with `STRIPE_WEBHOOK_SECRET`
+- [x] Handle `checkout.session.completed` event
+- [x] Extract user ID from session metadata
+- [x] Call `grantPremium(userId, stripeCustomerId)` to update database
+- [x] Handle idempotency (duplicate webhooks)
+- [x] Run `npm run typecheck` and `npm run lint`
 
 #### Task 5.3: Create checkout flow UI
 
@@ -462,7 +462,7 @@ Sequential list of all tasks in recommended order:
 | 4     | 4.1  | ✅ Complete    | Google-only auth    |
 | 4     | 4.2  | ⬜ Not Started | Premium integration |
 | 5     | 5.1  | ✅ Complete    | Stripe checkout     |
-| 5     | 5.2  | ⬜ Not Started | Stripe webhook      |
+| 5     | 5.2  | ✅ Complete    | Stripe webhook      |
 | 5     | 5.3  | ⬜ Not Started | Checkout UI         |
 | 5     | 5.4  | ⬜ Not Started | Success page        |
 | 6     | 6.1  | ⬜ Not Started | Manifest customizer |
