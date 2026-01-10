@@ -225,5 +225,9 @@
   "manifest_short_name_hint": "Max 12 characters recommended",
   "manifest_theme_color_label": "Theme Color",
   "manifest_background_color_label": "Background Color",
-  "manifest_color_preview": "Preview"
+  "manifest_color_preview": "Preview",
+  "cookie_banner_title": "Cookies & Analytics",
+  "cookie_banner_description": "We use cookies to understand usage and improve the product.",
+  "cookie_banner_accept": "Accept",
+  "cookie_banner_reject": "Reject"
 }

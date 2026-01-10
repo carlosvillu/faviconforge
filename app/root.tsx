@@ -8,6 +8,7 @@ import {
   ScrollRestoration,
   data,
 } from 'react-router'
+import { useLocation } from 'react-router'
 import { I18nextProvider } from 'react-i18next'
 import { type i18n } from 'i18next'
 
@@ -29,6 +30,10 @@ import { Toaster } from '~/components/ui/sonner'
 import { ThemeProvider } from '~/components/ThemeContext'
 import { HeaderStepProvider } from '~/contexts/HeaderStepContext'
 import { getThemeCookie, getThemeInitScript } from '~/lib/theme'
+import { CookieBanner } from '~/components/CookieBanner'
+import { useCookieConsent } from '~/hooks/useCookieConsent'
+import { useAnalytics } from '~/hooks/useAnalytics'
+import { getAnalyticsInitScript, trackPageView } from '~/lib/analytics'
 
 export const links: Route.LinksFunction = () => [
   { rel: 'icon', type: 'image/svg+xml', href: '/favicon-b.svg' },
@@ -52,6 +57,7 @@ export async function loader({ request }: Route.LoaderArgs) {
   const langCookie = parseLangCookie(cookieHeader)
   const locale = detectLocale(request, langCookie)
   const themePreference = getThemeCookie(cookieHeader)
+  const gaMeasurementId = process.env.GA_MEASUREMENT_ID ?? null
 
   // Get session from server
   const sessionData = await auth.api.getSession({
@@ -66,6 +72,7 @@ export async function loader({ request }: Route.LoaderArgs) {
     session: sessionData?.session ?? null,
     user: sessionData?.user ?? null,
     themePreference,
+    gaMeasurementId,
   }
 
   // Set cookie if it doesn't exist or differs from detected locale
@@ -92,6 +99,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <script
           dangerouslySetInnerHTML={{
             __html: getThemeInitScript(),
+          }}
+        />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: getAnalyticsInitScript(),
           }}
         />
       </head>
@@ -126,7 +138,12 @@ function getI18nInstanceForRender(locale: Locale): i18n | null {
 export default function App({ loaderData }: Route.ComponentProps) {
   const locale = (loaderData?.locale ?? DEFAULT_LOCALE) as Locale
   const themePreference = loaderData?.themePreference ?? null
+  const gaMeasurementId = loaderData?.gaMeasurementId ?? null
   const i18nInstance = getI18nInstanceForRender(locale)
+  const location = useLocation()
+
+  const { consent, accept, reject, shouldShowBanner } = useCookieConsent()
+  useAnalytics({ measurementId: gaMeasurementId, consent })
 
   // Update html lang attribute when locale changes
   useEffect(() => {
@@ -139,6 +156,14 @@ export default function App({ loaderData }: Route.ComponentProps) {
       i18nInstance.changeLanguage(locale)
     }
   }, [locale, i18nInstance])
+
+  useEffect(() => {
+    if (!gaMeasurementId) return
+    if (consent !== 'accepted') return
+
+    const path = `${location.pathname}${location.search}`
+    trackPageView(path, typeof document !== 'undefined' ? document.title : undefined)
+  }, [gaMeasurementId, consent, location.pathname, location.search])
 
   if (!i18nInstance) {
     // Fallback during SSR if loader hasn't run yet (shouldn't happen normally)
@@ -161,6 +186,9 @@ export default function App({ loaderData }: Route.ComponentProps) {
           <Outlet />
           <Footer />
           <Toaster />
+          {gaMeasurementId ? (
+            <CookieBanner isOpen={shouldShowBanner} onAccept={accept} onReject={reject} />
+          ) : null}
         </HeaderStepProvider>
       </I18nextProvider>
     </ThemeProvider>

@@ -320,12 +320,12 @@ Antes de empezar, necesitas tener configurado:
 
 #### Task 8.2: Create Privacy Policy page
 
-- [ ] Register `/privacy` route in `app/routes.ts`
-- [ ] Create `app/routes/privacy.tsx` with static content
-- [ ] Add privacy content (can be placeholder initially)
-- [ ] Add i18n keys for privacy page (or keep English-only)
-- [ ] Link to privacy/terms from footer
-- [ ] Run `npm run typecheck` and `npm run lint`
+- [x] Register `/privacy` route in `app/routes.ts`
+- [x] Create `app/routes/privacy.tsx` with static content
+- [x] Add privacy content (can be placeholder initially)
+- [x] Add i18n keys for privacy page (or keep English-only)
+- [x] Link to privacy/terms from footer
+- [x] Run `npm run typecheck` and `npm run lint`
 
 ---
 
@@ -336,10 +336,10 @@ Antes de empezar, necesitas tener configurado:
 
 #### Task 9.1: Set up GA4 tracking
 
-- [ ] Add GA4 script to `app/root.tsx` (conditionally load based on env)
-- [ ] Create `app/lib/analytics.ts` with `trackEvent(name: string, params?: object)` helper
-- [ ] Implement page view tracking on route changes
-- [ ] Run `npm run typecheck` and `npm run lint`
+- [x] Add GA4 script to `app/root.tsx` (conditionally load based on env)
+- [x] Create `app/lib/analytics.ts` with `trackEvent(name: string, params?: object)` helper
+- [x] Implement page view tracking on route changes
+- [x] Run `npm run typecheck` and `npm run lint`
 
 #### Task 9.2: Add event tracking throughout app
 
