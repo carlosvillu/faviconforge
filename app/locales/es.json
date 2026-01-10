@@ -208,5 +208,14 @@
   "contact_send_another": "Enviar Otro Mensaje",
   "contact_error": "Error al enviar el mensaje. Por favor, inténtalo de nuevo.",
   "contact_validation_error": "Por favor, revisa los campos del formulario e inténtalo de nuevo.",
-  "contact_rate_limited": "Demasiados mensajes. Por favor, inténtalo en {{minutes}} minutos."
+  "contact_rate_limited": "Demasiados mensajes. Por favor, inténtalo en {{minutes}} minutos.",
+  "manifest_customizer_title": "Personaliza tu PWA",
+  "manifest_app_name_label": "Nombre de la App",
+  "manifest_app_name_placeholder": "Mi App Increible",
+  "manifest_short_name_label": "Nombre Corto",
+  "manifest_short_name_placeholder": "MiApp",
+  "manifest_short_name_hint": "Max 12 caracteres recomendado",
+  "manifest_theme_color_label": "Color del Tema",
+  "manifest_background_color_label": "Color de Fondo",
+  "manifest_color_preview": "Vista previa"
 }

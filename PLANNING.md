@@ -270,16 +270,16 @@ Antes de empezar, necesitas tener configurado:
 
 #### Task 6.1: Add manifest customization to download page
 
-- [ ] Create `app/components/ManifestCustomizer.tsx` - form for app name, colors
-- [ ] Add color pickers for theme_color and background_color
-- [ ] Add text input for app short_name and name
-- [ ] Only show customizer for premium users
-- [ ] Store customization in component state (not persisted)
-- [ ] Pass customization to ZIP generation
-- [ ] Add i18n keys for customizer
-- [ ] Run `npm run typecheck` and `npm run lint`
-- [ ] Write E2E test: premium user customizes manifest → ZIP contains customized values
-- [ ] Run `npm run test:e2e -- --retries=1` and verify tests pass
+- [x] Create `app/components/ManifestCustomizer.tsx` - form for app name, colors
+- [x] Add color pickers for theme_color and background_color
+- [x] Add text input for app short_name and name
+- [x] Only show customizer for premium users
+- [x] Store customization in component state (not persisted)
+- [x] Pass customization to ZIP generation
+- [x] Add i18n keys for customizer
+- [x] Run `npm run typecheck` and `npm run lint`
+- [x] Write E2E test: premium user customizes manifest → ZIP contains customized values
+- [x] Run `npm run test:e2e -- --retries=1` and verify tests pass
 
 ---
 
@@ -464,7 +464,8 @@ Sequential list of all tasks in recommended order:
 | 5     | 5.1  | ✅ Complete    | Stripe checkout     |
 | 5     | 5.2  | ✅ Complete    | Stripe webhook      |
 | 5     | 5.3  | ✅ Complete    | Checkout UI         |
-| 5     | 5.4  | ⬜ Not Started | Success page        |
+| 5     | 5.4  | ✅ Complete    | Success page        |
+| 6     | 6.1  | ✅ Complete    | Manifest customizer |
 
 **Status Legend:** ⬜ Not Started | 🔄 In Progress | ✅ Complete | ⏸️ Blocked
 

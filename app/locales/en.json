@@ -212,5 +212,14 @@
   "contact_send_another": "Send Another Message",
   "contact_error": "Failed to send message. Please try again.",
   "contact_validation_error": "Please check the form fields and try again.",
-  "contact_rate_limited": "Too many messages. Please try again in {{minutes}} minutes."
+  "contact_rate_limited": "Too many messages. Please try again in {{minutes}} minutes.",
+  "manifest_customizer_title": "Customize Your PWA",
+  "manifest_app_name_label": "App Name",
+  "manifest_app_name_placeholder": "My Awesome App",
+  "manifest_short_name_label": "Short Name",
+  "manifest_short_name_placeholder": "MyApp",
+  "manifest_short_name_hint": "Max 12 characters recommended",
+  "manifest_theme_color_label": "Theme Color",
+  "manifest_background_color_label": "Background Color",
+  "manifest_color_preview": "Preview"
 }

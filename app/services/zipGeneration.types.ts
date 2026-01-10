@@ -13,6 +13,5 @@ export type FreeZipParams = {
 
 export type PremiumZipParams = FreeZipParams & {
   manifestOptions: ManifestOptions
-  manifest: string
   browserConfig: string
 }

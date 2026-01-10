@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react'
-import type { GeneratedFavicons } from '~/services/faviconGeneration.types'
+import type {
+  GeneratedFavicons,
+  ManifestOptions,
+} from '~/services/faviconGeneration.types'
 import { useStorage } from '~/hooks/useStorage'
 import { restoreFaviconsFromCacheData } from '~/services/faviconCache'
 import { generateFreeZip, generatePremiumZip } from '~/services/zipGeneration'
@@ -8,11 +11,11 @@ import type { ZipResult } from '~/services/zipGeneration.types'
 
 type DownloadState = 'idle' | 'generating' | 'ready' | 'error'
 
-
 type UseDownloadParams = {
   isPremium: boolean
   isLoggedIn: boolean
   autoDownload?: boolean
+  manifestOptions?: ManifestOptions
 }
 
 export type UseDownloadReturn = {
@@ -29,7 +32,12 @@ export type UseDownloadReturn = {
 }
 
 export function useDownload(params: UseDownloadParams): UseDownloadReturn {
-  const { isPremium, isLoggedIn, autoDownload = false } = params
+  const {
+    isPremium,
+    isLoggedIn,
+    autoDownload = false,
+    manifestOptions = DEFAULT_MANIFEST_OPTIONS,
+  } = params
 
   const storage = useStorage()
   const [selectedTier, setSelectedTier] = useState<'free' | 'premium'>(
@@ -101,6 +109,7 @@ export function useDownload(params: UseDownloadParams): UseDownloadReturn {
         selectedTier,
         generatedFavicons: restored,
         sourceImageBlob: cached.sourceImage.blob,
+        manifestOptions,
       })
 
       setWarnings(result.warnings)
@@ -169,8 +178,10 @@ async function generateZipForTier(params: {
   selectedTier: 'free' | 'premium'
   generatedFavicons: GeneratedFavicons
   sourceImageBlob: Blob
+  manifestOptions: ManifestOptions
 }) {
-  const { selectedTier, generatedFavicons, sourceImageBlob } = params
+  const { selectedTier, generatedFavicons, sourceImageBlob, manifestOptions } =
+    params
 
   if (selectedTier === 'free') {
     return generateFreeZip({
@@ -182,8 +193,7 @@ async function generateZipForTier(params: {
   return generatePremiumZip({
     formats: generatedFavicons.formats,
     sourceImageBlob,
-    manifest: generatedFavicons.manifest ?? '',
     browserConfig: generatedFavicons.browserConfig ?? '',
-    manifestOptions: DEFAULT_MANIFEST_OPTIONS,
+    manifestOptions,
   })
 }

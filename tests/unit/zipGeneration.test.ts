@@ -202,13 +202,6 @@ describe('generatePremiumZip', () => {
     backgroundColor: '#ffffff',
   }
 
-  const mockManifest = JSON.stringify({
-    name: 'Test App',
-    short_name: 'Test',
-    theme_color: '#000000',
-    background_color: '#ffffff',
-  })
-
   const mockBrowserConfig = `<?xml version="1.0" encoding="utf-8"?>
 <browserconfig>
   <msapplication>
@@ -231,7 +224,6 @@ describe('generatePremiumZip', () => {
       formats: mockFormats,
       sourceImageBlob: mockSourceImageBlob,
       manifestOptions: mockManifestOptions,
-      manifest: mockManifest,
       browserConfig: mockBrowserConfig,
     })
 
@@ -275,7 +267,6 @@ describe('generatePremiumZip', () => {
       formats: mockFormats,
       sourceImageBlob: mockSourceImageBlob,
       manifestOptions: mockManifestOptions,
-      manifest: mockManifest,
       browserConfig: mockBrowserConfig,
     })
 
@@ -299,7 +290,6 @@ describe('generatePremiumZip', () => {
       formats: mockFormats,
       sourceImageBlob: mockSourceImageBlob,
       manifestOptions: mockManifestOptions,
-      manifest: mockManifest,
       browserConfig: mockBrowserConfig,
     })
 
@@ -321,7 +311,6 @@ describe('generatePremiumZip', () => {
       formats: mockFormats,
       sourceImageBlob: mockSourceImageBlob,
       manifestOptions: mockManifestOptions,
-      manifest: mockManifest,
       browserConfig: mockBrowserConfig,
     })
 
@@ -342,7 +331,6 @@ describe('generatePremiumZip', () => {
       formats: mockFormats,
       sourceImageBlob: mockSourceImageBlob,
       manifestOptions: mockManifestOptions,
-      manifest: mockManifest,
       browserConfig: mockBrowserConfig,
     })
 

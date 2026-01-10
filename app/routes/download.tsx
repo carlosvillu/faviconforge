@@ -10,9 +10,11 @@ import { useHeaderStep } from '~/contexts/HeaderStepContext'
 import { UploadProgressBar } from '~/components/upload'
 import { useDownload } from '~/hooks/useDownload'
 import { useCheckout } from '~/hooks/useCheckout'
+import { useManifestCustomizer } from '~/hooks/useManifestCustomizer'
 import { DownloadSection } from '~/components/download/DownloadSection'
 import { FreePackageCard } from '~/components/download/FreePackageCard'
 import { PremiumPackageCard } from '~/components/download/PremiumPackageCard'
+import { ManifestCustomizer } from '~/components/download/ManifestCustomizer'
 import { DownloadActionBar } from '~/components/download/DownloadActionBar'
 import { PackageContentsPreview } from '~/components/download/PackageContentsPreview'
 import { WarningBanner } from '~/components/download/WarningBanner'
@@ -53,10 +55,13 @@ export default function DownloadPage() {
   const [searchParams] = useSearchParams()
   const autoDownload = searchParams.get('autoDownload') === 'true'
 
+  const manifestCustomizer = useManifestCustomizer()
+
   const download = useDownload({
     isPremium,
     isLoggedIn: !!user,
     autoDownload,
+    manifestOptions: manifestCustomizer.manifestOptions,
   })
 
   const checkout = useCheckout()
@@ -107,6 +112,13 @@ export default function DownloadPage() {
             onSelect={() => download.setSelectedTier('premium')}
           />
         </DownloadSection>
+
+        {download.selectedTier === 'premium' && download.canDownloadPremium && (
+          <ManifestCustomizer
+            options={manifestCustomizer.manifestOptions}
+            onChange={manifestCustomizer.updateOption}
+          />
+        )}
 
         <DownloadActionBar
           selectedTier={download.selectedTier}

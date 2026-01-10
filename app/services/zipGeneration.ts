@@ -5,6 +5,7 @@ import type {
   ZipResult,
 } from './zipGeneration.types'
 import type { FaviconFormat } from './faviconGeneration.types'
+import { generateManifest } from './faviconGeneration'
 
 // === INTERNAL HELPERS ===
 
@@ -193,7 +194,7 @@ export async function generateFreeZip(
 export async function generatePremiumZip(
   params: PremiumZipParams,
 ): Promise<ZipResult> {
-  const { formats, sourceImageBlob, manifest, browserConfig } = params
+  const { formats, sourceImageBlob, manifestOptions, browserConfig } = params
   const zip = new JSZip()
   const warnings: string[] = []
 
@@ -212,6 +213,8 @@ export async function generatePremiumZip(
   }
 
   // 3. Add metadata files at root
+  // Generate manifest.json with custom options
+  const manifest = generateManifest(manifestOptions)
   zip.file('manifest.json', manifest)
   zip.file('browserconfig.xml', browserConfig)
 
