@@ -89,6 +89,26 @@ export function trackEvent(name: string, params?: Record<string, unknown>): void
   }
 }
 
+export type FFEventName =
+  | 'file_upload_start'
+  | 'file_upload_success'
+  | 'file_upload_error'
+  | 'preview_view'
+  | 'download_nav_click'
+  | 'download_free_click'
+  | 'download_free_complete'
+  | 'download_premium_complete'
+  | 'premium_interest'
+  | 'login_start'
+  | 'login_complete'
+  | 'checkout_start'
+  | 'checkout_complete'
+  | 'contact_form_submit'
+
+export function trackFFEvent(name: FFEventName | (string & {}), params?: Record<string, unknown>): void {
+  trackEvent(`ff_${name}`, params)
+}
+
 export function trackPageView(path: string, title?: string): void {
   if (!isBrowser()) return
   if (!window.__ffGAInitialized) return

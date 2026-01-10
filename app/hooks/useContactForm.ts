@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
 import { useTranslation } from 'react-i18next'
 import { z } from 'zod'
+import { trackFFEvent } from '~/lib/analytics'
 
 const createContactSchema = (t: (key: string) => string) =>
   z.object({
@@ -45,6 +46,9 @@ export function useContactForm(): UseContactFormResult {
   })
 
   async function handleSubmit(data: ContactFormData) {
+    trackFFEvent('contact_form_submit', {
+      has_email: Boolean(data.email),
+    })
     setIsSubmitting(true)
 
     try {

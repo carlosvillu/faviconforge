@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { trackFFEvent } from '~/lib/analytics'
 
 type UseCheckoutResult = {
     startCheckout: () => Promise<void>
@@ -11,6 +12,10 @@ export function useCheckout(): UseCheckoutResult {
     const [error, setError] = useState<string | null>(null)
 
     const startCheckout = async () => {
+        trackFFEvent('checkout_start', {
+            tier: 'premium',
+            price_eur: 5,
+        })
         setIsLoading(true)
         setError(null)
 

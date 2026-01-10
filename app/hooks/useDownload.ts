@@ -8,6 +8,7 @@ import { restoreFaviconsFromCacheData } from '~/services/faviconCache'
 import { generateFreeZip, generatePremiumZip } from '~/services/zipGeneration'
 import { DEFAULT_MANIFEST_OPTIONS } from '~/services/faviconGeneration.types'
 import type { ZipResult } from '~/services/zipGeneration.types'
+import { trackFFEvent } from '~/lib/analytics'
 
 type DownloadState = 'idle' | 'generating' | 'ready' | 'error'
 
@@ -142,6 +143,20 @@ export function useDownload(params: UseDownloadParams): UseDownloadReturn {
     document.body.appendChild(a)
     a.click()
     a.remove()
+
+    if (selectedTier === 'free') {
+      trackFFEvent('download_free_complete', {
+        tier: 'free',
+        warnings_count: result?.warnings?.length ?? 0,
+        zip_filename: finalName,
+      })
+    } else {
+      trackFFEvent('download_premium_complete', {
+        tier: 'premium',
+        warnings_count: result?.warnings?.length ?? 0,
+        zip_filename: finalName,
+      })
+    }
 
     window.setTimeout(() => URL.revokeObjectURL(url), 1000)
   }

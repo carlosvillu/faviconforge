@@ -34,6 +34,7 @@ import { CookieBanner } from '~/components/CookieBanner'
 import { useCookieConsent } from '~/hooks/useCookieConsent'
 import { useAnalytics } from '~/hooks/useAnalytics'
 import { getAnalyticsInitScript, trackPageView } from '~/lib/analytics'
+import { useLoginCompleteTracking } from '~/hooks/useLoginCompleteTracking'
 
 export const links: Route.LinksFunction = () => [
   { rel: 'icon', type: 'image/svg+xml', href: '/favicon-b.svg' },
@@ -144,6 +145,7 @@ export default function App({ loaderData }: Route.ComponentProps) {
 
   const { consent, accept, reject, shouldShowBanner } = useCookieConsent()
   useAnalytics({ measurementId: gaMeasurementId, consent })
+  useLoginCompleteTracking({ session: loaderData?.session ?? null })
 
   // Update html lang attribute when locale changes
   useEffect(() => {

@@ -343,17 +343,17 @@ Antes de empezar, necesitas tener configurado:
 
 #### Task 9.2: Add event tracking throughout app
 
-- [ ] Track `file_upload_start` on file selection
-- [ ] Track `file_upload_success` on valid upload
-- [ ] Track `file_upload_error` on validation failure
-- [ ] Track `preview_view` on preview page load
-- [ ] Track `download_free_click` and `download_free_complete`
-- [ ] Track `premium_interest` when premium section is viewed
-- [ ] Track `login_start` and `login_complete`
-- [ ] Track `checkout_start` and `checkout_complete`
-- [ ] Track `download_premium_complete`
-- [ ] Track `contact_form_submit`
-- [ ] Run `npm run typecheck` and `npm run lint`
+- [x] Track `file_upload_start` on file selection
+- [x] Track `file_upload_success` on valid upload
+- [x] Track `file_upload_error` on validation failure
+- [x] Track `preview_view` on preview page load
+- [x] Track `download_free_click` and `download_free_complete`
+- [x] Track `premium_interest` when premium section is viewed
+- [x] Track `login_start` and `login_complete`
+- [x] Track `checkout_start` and `checkout_complete`
+- [x] Track `download_premium_complete`
+- [x] Track `contact_form_submit`
+- [x] Run `npm run typecheck` and `npm run lint`
 
 ---
 
@@ -466,6 +466,8 @@ Sequential list of all tasks in recommended order:
 | 5     | 5.3  | ✅ Complete | Checkout UI         |
 | 5     | 5.4  | ✅ Complete | Success page        |
 | 6     | 6.1  | ✅ Complete | Manifest customizer |
+| 9     | 9.1  | ✅ Complete | GA4 setup           |
+| 9     | 9.2  | ✅ Complete | GA4 events          |
 
 **Status Legend:** ⬜ Not Started | 🔄 In Progress | ✅ Complete | ⏸️ Blocked
 

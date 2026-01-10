@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { signIn } from '~/lib/auth.client'
 import { BrutalistButton } from '~/components/BrutalistButton'
+import { trackFFEvent } from '~/lib/analytics'
 
 interface GoogleAuthButtonProps {
   mode: 'signup' | 'login'
@@ -13,6 +14,20 @@ export function GoogleAuthButton({ mode, callbackURL = '/' }: GoogleAuthButtonPr
   const [isLoading, setIsLoading] = useState(false)
 
   const handleClick = async () => {
+    trackFFEvent('login_start', {
+      provider: 'google',
+      mode,
+      redirect_to: callbackURL,
+    })
+
+    if (typeof window !== 'undefined') {
+      try {
+        window.sessionStorage.setItem('ff_login_flow_provider', 'google')
+      } catch {
+        // ignore
+      }
+    }
+
     setIsLoading(true)
     try {
       if (mode === 'signup') {

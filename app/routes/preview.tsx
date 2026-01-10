@@ -1,16 +1,13 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import type { LoaderFunctionArgs } from 'react-router'
 import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { getCurrentUser } from '~/lib/auth.server'
 import { useHeaderStep } from '~/contexts/HeaderStepContext'
 import { useFaviconGeneration } from '~/hooks/useFaviconGeneration'
+import { trackFFEvent } from '~/lib/analytics'
 import { UploadProgressBar } from '~/components/upload'
-import {
-  PreviewGrid,
-  PreviewActions,
-  PreviewInfoBox,
-} from '~/components/preview'
+import { PreviewGrid, PreviewActions, PreviewInfoBox } from '~/components/preview'
 
 export function meta() {
   return [{ title: 'Preview - FaviconForge' }]
@@ -28,8 +25,8 @@ export default function PreviewPage() {
   const { t } = useTranslation()
   const { setStep } = useHeaderStep()
   const navigate = useNavigate()
-  const { generationState, getFaviconUrl, hasSourceImage } =
-    useFaviconGeneration()
+  const { generationState, getFaviconUrl, hasSourceImage } = useFaviconGeneration()
+  const hasTrackedPreviewView = useRef(false)
 
   // Set step info for header
   useEffect(() => {
@@ -43,6 +40,16 @@ export default function PreviewPage() {
       navigate('/upload')
     }
   }, [hasSourceImage, navigate])
+
+  useEffect(() => {
+    if (!hasSourceImage) return
+    if (hasTrackedPreviewView.current) return
+
+    trackFFEvent('preview_view', {
+      has_source_image: true,
+    })
+    hasTrackedPreviewView.current = true
+  }, [hasSourceImage])
 
   const handleBack = () => {
     navigate('/upload')
@@ -64,19 +71,14 @@ export default function PreviewPage() {
           <h2 className="text-6xl font-black uppercase mb-4 leading-none">
             {t('preview_title_line1')}
             <br />
-            <span className="bg-black text-white px-2">
-              {t('preview_title_line2')}
-            </span>
+            <span className="bg-black text-white px-2">{t('preview_title_line2')}</span>
           </h2>
           <p className="text-xl font-bold border-l-8 border-black pl-4 mt-6">
             {t('preview_subtitle')}
           </p>
         </div>
 
-        <PreviewGrid
-          generationState={generationState}
-          getFaviconUrl={getFaviconUrl}
-        />
+        <PreviewGrid generationState={generationState} getFaviconUrl={getFaviconUrl} />
 
         <PreviewActions onBack={handleBack} onDownload={handleDownload} />
 

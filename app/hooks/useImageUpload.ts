@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router'
 import { validateImage } from '~/services/imageValidation'
 import { useStorage } from '~/hooks/useStorage'
+import { trackFFEvent } from '~/lib/analytics'
 
 type UploadState = 'idle' | 'validating' | 'success' | 'error'
 
@@ -24,6 +25,12 @@ export function useImageUpload() {
     const uploadedFile = acceptedFiles[0]
     if (!uploadedFile) return
 
+    trackFFEvent('file_upload_start', {
+      file_type: uploadedFile.type || 'unknown',
+      file_size_mb: Math.round((uploadedFile.size / 1024 / 1024) * 100) / 100,
+      source: 'dropzone',
+    })
+
     // Reset state
     setIsValidating(true)
     setValidationError(null)
@@ -33,12 +40,19 @@ export function useImageUpload() {
     const result = await validateImage(uploadedFile)
 
     if (result.valid) {
+      trackFFEvent('file_upload_success', {
+        file_type: uploadedFile.type || 'unknown',
+        file_size_mb: Math.round((uploadedFile.size / 1024 / 1024) * 100) / 100,
+      })
       // Create preview URL
       const url = URL.createObjectURL(uploadedFile)
       setFile(uploadedFile)
       setPreviewUrl(url)
       setIsValid(true)
     } else {
+      trackFFEvent('file_upload_error', {
+        error_key: result.errorKey,
+      })
       // Set validation error
       setValidationError({
         errorKey: result.errorKey,

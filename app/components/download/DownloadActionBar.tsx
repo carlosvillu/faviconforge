@@ -1,6 +1,7 @@
 import { Link } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { BrutalistButton } from '~/components/BrutalistButton'
+import { trackFFEvent } from '~/lib/analytics'
 
 type DownloadActionBarProps = {
   selectedTier: 'free' | 'premium'
@@ -30,6 +31,13 @@ export function DownloadActionBar({
   const showPremiumDownload = selectedTier === 'premium' && isPremium
   const showFreeDownload = selectedTier === 'free'
 
+  const handleFreeDownloadClick = async () => {
+    trackFFEvent('download_free_click', {
+      tier: 'free',
+    })
+    await onDownload()
+  }
+
   const description =
     selectedTier === 'free'
       ? t('download_ready_free_desc')
@@ -49,7 +57,7 @@ export function DownloadActionBar({
           {showFreeDownload && (
             <BrutalistButton
               type="button"
-              onClick={onDownload}
+              onClick={handleFreeDownloadClick}
               disabled={isGenerating}
               className="px-12 py-6 text-xl"
             >
@@ -86,9 +94,7 @@ export function DownloadActionBar({
               className="bg-black text-yellow-300 px-12 py-6 font-black uppercase text-xl border-4 border-black rounded-none hover:bg-white hover:text-black transition-all hover:scale-105 disabled:opacity-70 disabled:hover:scale-100 disabled:hover:bg-black disabled:hover:text-yellow-300"
             >
               <div className="flex flex-col items-center">
-                <span>
-                  {isCheckoutLoading ? t('checkout_redirecting') : t('download_buy_cta')}
-                </span>
+                <span>{isCheckoutLoading ? t('checkout_redirecting') : t('download_buy_cta')}</span>
                 {!isCheckoutLoading && (
                   <span className="text-xs font-bold mt-1">{t('download_buy_subtitle')}</span>
                 )}

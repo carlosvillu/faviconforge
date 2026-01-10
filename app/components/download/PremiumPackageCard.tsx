@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next'
+import { trackFFEvent } from '~/lib/analytics'
 
 type PremiumPackageCardProps = {
   isSelected: boolean
@@ -7,6 +8,13 @@ type PremiumPackageCardProps = {
 
 export function PremiumPackageCard({ isSelected, onSelect }: PremiumPackageCardProps) {
   const { t } = useTranslation()
+
+  const handleSelect = () => {
+    trackFFEvent('premium_interest', {
+      location: 'download',
+    })
+    onSelect()
+  }
 
   const items = [
     'download_premium_item_all_free',
@@ -22,7 +30,7 @@ export function PremiumPackageCard({ isSelected, onSelect }: PremiumPackageCardP
   return (
     <button
       type="button"
-      onClick={onSelect}
+      onClick={handleSelect}
       className={getCardClassName({ isSelected, variant: 'premium' })}
     >
       <div className="absolute top-0 right-0 bg-red-600 text-white px-4 py-1 font-black text-sm rotate-12 transform translate-x-4 -translate-y-2">
