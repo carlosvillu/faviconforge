@@ -67,8 +67,9 @@ export function changeLanguage(newLocale: Locale): void {
   // Update cookie
   document.cookie = `${COOKIE_NAME}=${newLocale}; Path=/; Max-Age=${COOKIE_MAX_AGE}; SameSite=Lax`
 
-  // Change i18next language (triggers re-render through react-i18next)
-  i18next.changeLanguage(newLocale)
+  // Reload page to trigger loaders with new locale
+  // This ensures server-rendered content (like Terms/Privacy) updates correctly
+  window.location.reload()
 }
 
 export function getCurrentLocale(): Locale {
