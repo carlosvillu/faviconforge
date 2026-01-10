@@ -18,4 +18,5 @@ export default [
   route('api/contact', 'routes/api.contact.tsx'),
   route('api/__test__/contact', 'routes/api.__test__.contact.tsx'),
   route('terms', 'routes/terms/index.tsx'),
+  route('privacy', 'routes/privacy/index.tsx'),
 ] satisfies RouteConfig

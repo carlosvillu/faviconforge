@@ -312,11 +312,11 @@ Antes de empezar, necesitas tener configurado:
 
 #### Task 8.1: Create Terms of Service page
 
-- [ ] Register `/terms` route in `app/routes.ts`
-- [ ] Create `app/routes/terms.tsx` with static content
-- [ ] Add terms content (can be placeholder initially, user to provide final copy)
-- [ ] Add i18n keys for terms page (or keep English-only for legal docs)
-- [ ] Run `npm run typecheck` and `npm run lint`
+- [x] Register `/terms` route in `app/routes.ts`
+- [x] Create `app/routes/terms.tsx` with static content
+- [x] Add terms content (can be placeholder initially, user to provide final copy)
+- [x] Add i18n keys for terms page (or keep English-only for legal docs)
+- [x] Run `npm run typecheck` and `npm run lint`
 
 #### Task 8.2: Create Privacy Policy page
 
@@ -447,25 +447,25 @@ Sequential list of all tasks in recommended order:
 
 ## Progress Tracker
 
-| Phase | Task | Status         | Notes               |
-| ----- | ---- | -------------- | ------------------- |
-| 0     | 0.1  | ✅ Complete    | Database schema     |
-| 0     | 0.2  | ✅ Complete    | Premium helpers     |
-| 1     | 1.1  | ✅ Complete    | Image validation    |
-| 1     | 1.2  | ✅ Complete    | Upload route        |
-| 1     | 1.3  | ✅ Complete    | Landing page        |
-| 2     | 2.1  | ✅ Complete    | Dependencies        |
-| 2     | 2.2  | ✅ Complete    | Favicon service     |
-| 2     | 2.3  | ✅ Complete    | Preview route       |
-| 3     | 3.1  | ✅ Complete    | ZIP service         |
-| 3     | 3.2  | ✅ Complete    | Download route      |
-| 4     | 4.1  | ✅ Complete    | Google-only auth    |
-| 4     | 4.2  | ✅ Complete    | Premium integration |
-| 5     | 5.1  | ✅ Complete    | Stripe checkout     |
-| 5     | 5.2  | ✅ Complete    | Stripe webhook      |
-| 5     | 5.3  | ✅ Complete    | Checkout UI         |
-| 5     | 5.4  | ✅ Complete    | Success page        |
-| 6     | 6.1  | ✅ Complete    | Manifest customizer |
+| Phase | Task | Status      | Notes               |
+| ----- | ---- | ----------- | ------------------- |
+| 0     | 0.1  | ✅ Complete | Database schema     |
+| 0     | 0.2  | ✅ Complete | Premium helpers     |
+| 1     | 1.1  | ✅ Complete | Image validation    |
+| 1     | 1.2  | ✅ Complete | Upload route        |
+| 1     | 1.3  | ✅ Complete | Landing page        |
+| 2     | 2.1  | ✅ Complete | Dependencies        |
+| 2     | 2.2  | ✅ Complete | Favicon service     |
+| 2     | 2.3  | ✅ Complete | Preview route       |
+| 3     | 3.1  | ✅ Complete | ZIP service         |
+| 3     | 3.2  | ✅ Complete | Download route      |
+| 4     | 4.1  | ✅ Complete | Google-only auth    |
+| 4     | 4.2  | ✅ Complete | Premium integration |
+| 5     | 5.1  | ✅ Complete | Stripe checkout     |
+| 5     | 5.2  | ✅ Complete | Stripe webhook      |
+| 5     | 5.3  | ✅ Complete | Checkout UI         |
+| 5     | 5.4  | ✅ Complete | Success page        |
+| 6     | 6.1  | ✅ Complete | Manifest customizer |
 
 **Status Legend:** ⬜ Not Started | 🔄 In Progress | ✅ Complete | ⏸️ Blocked
 

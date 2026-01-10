@@ -3,45 +3,40 @@ import { useLoaderData } from 'react-router'
 import { marked } from 'marked'
 import { createI18nInstance, detectLocale, parseLangCookie } from '~/lib/i18n'
 
-// Static imports of markdown files (Vite handles ?raw)
-import termsEn from './terms.en.md?raw'
-import termsEs from './terms.es.md?raw'
+import privacyEn from './privacy.en.md?raw'
+import privacyEs from './privacy.es.md?raw'
 
 const markdownContent = {
-  en: termsEn,
-  es: termsEs,
+  en: privacyEn,
+  es: privacyEs,
 } as const
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
   return [
-    { title: data?.metaTitle ?? 'Terms of Service - FaviconForge' },
+    { title: data?.metaTitle ?? 'Privacy Policy - FaviconForge' },
     {
       name: 'description',
-      content: data?.metaDescription ?? 'Terms of Service for FaviconForge favicon generator',
+      content: data?.metaDescription ?? 'Privacy Policy for the FaviconForge favicon generator',
     },
   ]
 }
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  // Detect locale from cookie or Accept-Language header
   const cookieHeader = request.headers.get('Cookie')
   const langCookie = parseLangCookie(cookieHeader)
   const locale = detectLocale(request, langCookie)
 
-  // Get markdown content for locale
   const markdown = markdownContent[locale]
-
-  // Convert to HTML
   const html = await marked.parse(markdown)
 
   const i18n = await createI18nInstance(locale)
-  const metaTitle = i18n.t('terms_meta_title')
-  const metaDescription = i18n.t('terms_meta_description')
+  const metaTitle = i18n.t('privacy_meta_title')
+  const metaDescription = i18n.t('privacy_meta_description')
 
   return { content: html, locale, metaTitle, metaDescription }
 }
 
-export default function TermsPage() {
+export default function PrivacyPage() {
   const { content } = useLoaderData<typeof loader>()
 
   return (

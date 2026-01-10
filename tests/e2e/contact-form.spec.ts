@@ -7,6 +7,17 @@ test.describe('Contact Form', () => {
     await request.delete(`${baseUrl}/api/__test__/contact`)
   })
 
+  test.beforeEach(async ({ page }) => {
+    await page.context().addCookies([
+      {
+        name: 'lang',
+        value: 'en',
+        domain: 'localhost',
+        path: '/',
+      },
+    ])
+  })
+
   test('should load contact page correctly', async ({ page }) => {
     await page.goto('/contact')
 
