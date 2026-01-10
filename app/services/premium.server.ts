@@ -45,7 +45,7 @@ export async function getPremiumStatus(userId: string): Promise<PremiumStatus> {
  */
 export async function grantPremium(
   userId: string,
-  stripeCustomerId: string
+  stripeCustomerId: string | null
 ): Promise<void> {
   const result = await db.select().from(users).where(eq(users.id, userId))
 

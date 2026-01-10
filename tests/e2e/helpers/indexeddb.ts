@@ -76,9 +76,21 @@ export async function waitForFaviconCacheInIDB(page: Page): Promise<void> {
 export async function clearIndexedDB(page: Page): Promise<void> {
   await page.evaluate(() => {
     return new Promise<void>((resolve) => {
-      const request = indexedDB.deleteDatabase('faviconforge')
-      request.onsuccess = () => resolve()
-      request.onerror = () => resolve() // Resolve anyway, DB might not exist
+      const watchdog = setTimeout(() => resolve(), 3000)
+
+      const cleanup = () => {
+        clearTimeout(watchdog)
+        resolve()
+      }
+
+      try {
+        const request = indexedDB.deleteDatabase('faviconforge')
+        request.onsuccess = () => cleanup()
+        request.onerror = () => cleanup() // Resolve anyway, DB might not exist
+        request.onblocked = () => cleanup()
+      } catch {
+        cleanup()
+      }
     })
   })
 }

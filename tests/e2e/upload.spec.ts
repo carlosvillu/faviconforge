@@ -131,10 +131,10 @@ test.describe('Upload Page', () => {
   })
 
   test('should store image and navigate on continue', async ({ page }) => {
-    await page.goto('/upload')
-
     // Clear IndexedDB before test
     await clearIndexedDB(page)
+
+    await page.goto('/upload')
 
     // Upload valid PNG
     const fileInput = await page.locator('input[type="file"]')

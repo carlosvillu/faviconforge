@@ -11,8 +11,9 @@ test.describe('Preview Page', () => {
     page,
   }) => {
     // Clear IndexedDB
-    await page.goto('/upload')
     await clearIndexedDB(page)
+
+    await page.goto('/upload')
 
     // Navigate directly to /preview
     await page.goto('/preview')

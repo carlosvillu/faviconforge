@@ -189,5 +189,9 @@
   "download_warning_ico_generation_failed": "ICO generation failed. ZIP contains PNG files only.",
   "download_back_preview": "Back to Preview",
   "checkout_redirecting": "Redirecting to Stripe...",
-  "checkout_error_generic": "Error starting checkout. Please try again."
+  "checkout_error_generic": "Error starting checkout. Please try again.",
+  "success_title": "Welcome to Premium!",
+  "success_subtitle": "You now have lifetime access to all formats.",
+  "success_redirecting": "Redirecting you to the download page...",
+  "success_manual_link": "Click here if not redirected"
 }

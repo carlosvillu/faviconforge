@@ -8,9 +8,11 @@ import type { ZipResult } from '~/services/zipGeneration.types'
 
 type DownloadState = 'idle' | 'generating' | 'ready' | 'error'
 
+
 type UseDownloadParams = {
   isPremium: boolean
   isLoggedIn: boolean
+  autoDownload?: boolean
 }
 
 export type UseDownloadReturn = {
@@ -27,7 +29,7 @@ export type UseDownloadReturn = {
 }
 
 export function useDownload(params: UseDownloadParams): UseDownloadReturn {
-  const { isPremium, isLoggedIn } = params
+  const { isPremium, isLoggedIn, autoDownload = false } = params
 
   const storage = useStorage()
   const [selectedTier, setSelectedTier] = useState<'free' | 'premium'>(
@@ -40,6 +42,13 @@ export function useDownload(params: UseDownloadParams): UseDownloadReturn {
   const [hasSourceImage, setHasSourceImage] = useState<boolean | 'loading'>('loading')
 
   const canDownloadPremium = isLoggedIn && isPremium
+
+  // Sync selectedTier when isPremium changes (e.g., after webhook grants premium)
+  useEffect(() => {
+    if (isPremium) {
+      setSelectedTier('premium')
+    }
+  }, [isPremium])
 
   useEffect(() => {
     let cancelled = false
@@ -127,6 +136,20 @@ export function useDownload(params: UseDownloadParams): UseDownloadReturn {
 
     window.setTimeout(() => URL.revokeObjectURL(url), 1000)
   }
+
+  // Auto-download effect
+  useEffect(() => {
+    if (
+      autoDownload &&
+      hasSourceImage === true &&
+      canDownloadPremium &&
+      selectedTier === 'premium' &&
+      downloadState === 'idle'
+    ) {
+      triggerDownload()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoDownload, hasSourceImage, canDownloadPremium, selectedTier, downloadState])
 
   return {
     selectedTier,

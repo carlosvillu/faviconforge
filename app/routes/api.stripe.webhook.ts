@@ -33,9 +33,11 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         const userId = session.metadata?.userId
         const stripeCustomerId = session.customer
 
-        if (userId && typeof stripeCustomerId === 'string') {
+        if (userId) {
             try {
-                await grantPremium(userId, stripeCustomerId)
+                // stripeCustomerId should always exist now, but we keep validation for safety
+                const customerId = typeof stripeCustomerId === 'string' ? stripeCustomerId : null
+                await grantPremium(userId, customerId)
                 console.log(`Granted premium to user ${userId}`)
             } catch (error) {
                 console.error('Error granting premium:', error)
@@ -43,7 +45,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
                 // But logging the error is important.
             }
         } else {
-            console.error('Missing userId or stripeCustomerId in session metadata')
+            console.error('Missing userId in session metadata')
         }
     }
 

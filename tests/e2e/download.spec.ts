@@ -8,8 +8,9 @@ const __dirname = path.dirname(__filename)
 
 test.describe('Download Page', () => {
   test('should redirect to /upload without cached data', async ({ page }) => {
-    await page.goto('/upload')
     await clearIndexedDB(page)
+
+    await page.goto('/upload')
 
     await page.goto('/download')
 

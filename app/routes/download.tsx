@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import type { LoaderFunctionArgs } from 'react-router'
-import { useLoaderData, useNavigate } from 'react-router'
+import { useLoaderData, useNavigate, useSearchParams } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { getCurrentUser } from '~/lib/auth.server'
@@ -50,10 +50,13 @@ export default function DownloadPage() {
   const { setStep } = useHeaderStep()
   const navigate = useNavigate()
   const { user, isPremium } = useLoaderData() as LoaderData
+  const [searchParams] = useSearchParams()
+  const autoDownload = searchParams.get('autoDownload') === 'true'
 
   const download = useDownload({
     isPremium,
     isLoggedIn: !!user,
+    autoDownload,
   })
 
   const checkout = useCheckout()

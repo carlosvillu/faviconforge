@@ -251,15 +251,15 @@ Antes de empezar, necesitas tener configurado:
 
 #### Task 5.4: Create success page
 
-- [ ] Register `/success` route in `app/routes.ts`
-- [ ] Create `app/routes/success.tsx` - post-payment confirmation
-- [ ] Show "Welcome to Premium!" message
-- [ ] Explain lifetime access
-- [ ] Auto-redirect to `/download` after 3 seconds (or manual link)
-- [ ] Add i18n keys for success page
-- [ ] Run `npm run typecheck` and `npm run lint`
-- [ ] Write E2E test: mock Stripe webhook → user marked as premium → can download premium ZIP
-- [ ] Run `npm run test:e2e -- --retries=1` and verify tests pass
+- [x] Register `/success` route in `app/routes.ts`
+- [x] Create `app/routes/success.tsx` - post-payment confirmation
+- [x] Show "Welcome to Premium!" message
+- [x] Explain lifetime access
+- [x] Auto-redirect to `/download` after 3 seconds (or manual link)
+- [x] Add i18n keys for success page
+- [x] Run `npm run typecheck` and `npm run lint`
+- [x] Write E2E test: mock Stripe webhook → user marked as premium → can download premium ZIP
+- [x] Run `npm run test:e2e -- --retries=1` and verify tests pass
 
 ---
 
