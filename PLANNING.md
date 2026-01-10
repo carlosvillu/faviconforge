@@ -290,18 +290,18 @@ Antes de empezar, necesitas tener configurado:
 
 #### Task 7.1: Create contact form route and service
 
-- [ ] Install `resend` package
-- [ ] Create `app/services/email.server.ts` with Resend client initialization
-- [ ] Create `sendContactEmail(from: string, subject: string, message: string): Promise<void>`
-- [ ] Register `/contact` route in `app/routes.ts`
-- [ ] Create `app/routes/contact.tsx` with form and action handler
-- [ ] Create `app/components/ContactForm.tsx` with name, email, message fields
-- [ ] Implement form validation with Zod
-- [ ] Show success toast on submission
-- [ ] Add i18n keys for contact form
-- [ ] Run `npm run typecheck` and `npm run lint`
-- [ ] Write E2E test: fill contact form → submit → success message shown
-- [ ] Run `npm run test:e2e -- --retries=1` and verify tests pass
+- [x] Install `resend` package
+- [x] Create `app/services/email.server.ts` with Resend client initialization
+- [x] Create `sendContactEmail(from: string, subject: string, message: string): Promise<void>`
+- [x] Register `/contact` route in `app/routes.ts`
+- [x] Create `app/routes/contact.tsx` with form and action handler
+- [x] Create `app/components/ContactForm.tsx` with name, email, message fields
+- [x] Implement form validation with Zod
+- [x] Show success toast on submission
+- [x] Add i18n keys for contact form
+- [x] Run `npm run typecheck` and `npm run lint`
+- [x] Write E2E test: fill contact form → submit → success message shown
+- [x] Run `npm run test:e2e -- --retries=1` and verify tests pass
 
 ---
 
