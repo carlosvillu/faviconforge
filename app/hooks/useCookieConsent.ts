@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 import {
   type ConsentState,
@@ -7,11 +7,15 @@ import {
 } from '~/lib/cookieConsent'
 
 export function useCookieConsent() {
-  const hasHydrated = typeof document !== 'undefined'
+  const [hasHydrated, setHasHydrated] = useState(false)
   const [consent, setConsent] = useState<ConsentState>(() => {
     if (typeof document === 'undefined') return 'unset'
     return readConsentFromCookie(document.cookie)
   })
+
+  useEffect(() => {
+    setHasHydrated(true)
+  }, [])
 
   const accept = useCallback(() => {
     if (typeof document === 'undefined') return
