@@ -11,12 +11,10 @@ export function HeroSection() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           {/* Left Column - Text Content */}
           <div className="space-y-8">
-            <h2 className="text-7xl font-black uppercase leading-none">
+            <h2 className="text-6xl font-black uppercase leading-none">
               {t('landing_hero_line1')}
               <br />
-              <span className="bg-black text-yellow-300 px-2">
-                {t('landing_hero_line2')}
-              </span>
+              <span className="bg-black text-yellow-300 px-2">{t('landing_hero_line2')}</span>
               <br />
               {t('landing_hero_line3')}
               <br />
