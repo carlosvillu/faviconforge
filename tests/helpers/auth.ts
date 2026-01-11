@@ -32,10 +32,13 @@ export async function createAuthSession(
     name?: string
   }
 ): Promise<AuthResult> {
+  const origin = new URL(baseUrl).origin
   const response = await fetch(`${baseUrl}/api/auth/sign-up/email`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      Origin: origin,
+      Referer: origin,
     },
     body: JSON.stringify({
       email: options.email,

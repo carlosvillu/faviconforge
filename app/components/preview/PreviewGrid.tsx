@@ -9,27 +9,20 @@ import { WindowsTilePreview } from './WindowsTilePreview'
 import { BookmarkPreview } from './BookmarkPreview'
 import { PWAInstallPreview } from './PWAInstallPreview'
 
-type PreviewGridProps = Pick<
-  UseFaviconGenerationReturn,
-  'generationState' | 'getFaviconUrl'
->
+type PreviewGridProps = Pick<UseFaviconGenerationReturn, 'generationState' | 'getFaviconUrl'> & {
+  isUserPremium: boolean
+}
 
 type PreviewConfig = {
   title: string
   description: string
   size: number
   tier: 'free' | 'premium'
-  component: (props: {
-    faviconUrl: string | null
-    isBlurred?: boolean
-  }) => React.JSX.Element
+  component: (props: { faviconUrl: string | null; isBlurred?: boolean }) => React.JSX.Element
   backgroundColor: 'yellow' | 'white'
 }
 
-export function PreviewGrid({
-  generationState,
-  getFaviconUrl,
-}: PreviewGridProps) {
+export function PreviewGrid({ generationState, getFaviconUrl, isUserPremium }: PreviewGridProps) {
   const { t } = useTranslation()
 
   const previews: PreviewConfig[] = [
@@ -91,15 +84,12 @@ export function PreviewGrid({
 
         if (isGenerating && !faviconUrl) {
           return (
-            <PreviewCardSkeleton
-              key={preview.title}
-              backgroundColor={preview.backgroundColor}
-            />
+            <PreviewCardSkeleton key={preview.title} backgroundColor={preview.backgroundColor} />
           )
         }
 
         const isPremium = preview.tier === 'premium'
-        const isBlurred = isPremium
+        const isBlurred = isPremium && !isUserPremium
 
         return (
           <PreviewCard

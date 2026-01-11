@@ -2,6 +2,7 @@ import { test, expect } from '../fixtures/app.fixture'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import { clearIndexedDB, waitForSourceImageInIDB } from './helpers/indexeddb'
+import { createAuthSession, setAuthCookie } from '../helpers/auth'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -123,8 +124,52 @@ test.describe('Preview Page', () => {
     await expect(faviconImages.first()).toBeVisible()
 
     // Verify premium previews have blur effect
-    const iosCard = page.locator('div.blur-\\[4px\\]').first()
-    await expect(iosCard).toBeVisible()
+    const blurredPremiumPreview = page.locator('.blur-\\[4px\\]').first()
+    await expect(blurredPremiumPreview).toBeVisible()
+  })
+
+  test('premium user should see premium previews unblurred', async ({
+    page,
+    context,
+    appServer,
+    request,
+  }) => {
+    const baseUrl = `http://localhost:${appServer.port}`
+
+    const auth = await createAuthSession(baseUrl, {
+      email: 'premium.preview@example.com',
+      password: 'Password123!',
+      name: 'Premium Preview',
+    })
+    await setAuthCookie(context, auth.token)
+
+    const grantResponse = await request.post(`${baseUrl}/api/__test__/premium`, {
+      data: { userId: auth.userId, stripeCustomerId: 'cus_test_preview' },
+    })
+    expect(grantResponse.ok()).toBe(true)
+
+    // Upload valid image on /upload
+    await page.goto('/upload')
+    const fileInput = await page.locator('input[type="file"]')
+    const validImagePath = path.join(
+      __dirname,
+      '../fixtures/images/valid-512x512.png'
+    )
+    await fileInput.setInputFiles(validImagePath)
+
+    // Wait for validation
+    await page.waitForTimeout(500)
+
+    // Click Continue
+    const continueButton = page.getByRole('button', { name: /Continue|Continuar/i })
+    await continueButton.click()
+
+    // Wait for navigation and generation
+    await page.waitForURL('**/preview', { timeout: 5000 })
+    await page.waitForTimeout(2000)
+
+    // Premium previews should not be blurred for premium user
+    await expect(page.locator('.blur-\\[4px\\]')).toHaveCount(0)
   })
 
   test('should navigate back to /upload when clicking Back button', async ({

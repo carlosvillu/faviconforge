@@ -1,13 +1,21 @@
 import { useEffect, useRef } from 'react'
 import type { LoaderFunctionArgs } from 'react-router'
-import { useNavigate } from 'react-router'
+import { useLoaderData, useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { getCurrentUser } from '~/lib/auth.server'
+import type { User } from '~/lib/auth'
+import { getPremiumStatus } from '~/services/premium.server'
 import { useHeaderStep } from '~/contexts/HeaderStepContext'
 import { useFaviconGeneration } from '~/hooks/useFaviconGeneration'
 import { trackFFEvent } from '~/lib/analytics'
 import { UploadProgressBar } from '~/components/upload'
 import { PreviewGrid, PreviewActions, PreviewInfoBox } from '~/components/preview'
+
+type LoaderData = {
+  user: User | null
+  session: unknown | null
+  isPremium: boolean
+}
 
 export function meta() {
   return [{ title: 'Preview - FaviconForge' }]
@@ -15,16 +23,28 @@ export function meta() {
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const authSession = await getCurrentUser(request)
-  return {
-    user: authSession?.user ?? null,
-    session: authSession?.session ?? null,
+
+  if (!authSession?.user) {
+    return {
+      user: null,
+      session: authSession?.session ?? null,
+      isPremium: false,
+    } satisfies LoaderData
   }
+
+  const status = await getPremiumStatus(authSession.user.id)
+  return {
+    user: authSession.user,
+    session: authSession.session,
+    isPremium: status.isPremium,
+  } satisfies LoaderData
 }
 
 export default function PreviewPage() {
   const { t } = useTranslation()
   const { setStep } = useHeaderStep()
   const navigate = useNavigate()
+  const { isPremium } = useLoaderData() as LoaderData
   const { generationState, getFaviconUrl, hasSourceImage } = useFaviconGeneration()
   const hasTrackedPreviewView = useRef(false)
 
@@ -78,7 +98,11 @@ export default function PreviewPage() {
           </p>
         </div>
 
-        <PreviewGrid generationState={generationState} getFaviconUrl={getFaviconUrl} />
+        <PreviewGrid
+          generationState={generationState}
+          getFaviconUrl={getFaviconUrl}
+          isUserPremium={isPremium}
+        />
 
         <PreviewActions onBack={handleBack} onDownload={handleDownload} />
 
