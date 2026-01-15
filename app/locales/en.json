@@ -69,7 +69,7 @@
   "upload_formats_list": "PNG • JPEG • WebP • SVG",
   "upload_requirements_title": "Image Requirements:",
   "upload_req_square": "Square aspect ratio (1:1)",
-  "upload_req_min_size": "Minimum 512×512 pixels",
+  "upload_req_min_size": "Minimum 512×512 pixels (raster images)",
   "upload_req_max_file": "Maximum 10MB file size",
   "upload_req_format": "PNG, JPEG, WebP or SVG format",
   "landing_hero_line1": "Generate",

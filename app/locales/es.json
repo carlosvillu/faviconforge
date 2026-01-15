@@ -69,7 +69,7 @@
   "upload_formats_list": "PNG • JPEG • WebP • SVG",
   "upload_requirements_title": "Requisitos de Imagen:",
   "upload_req_square": "Relacion de aspecto cuadrada (1:1)",
-  "upload_req_min_size": "Minimo 512×512 pixeles",
+  "upload_req_min_size": "Minimo 512×512 pixeles (imagenes raster)",
   "upload_req_max_file": "Tamano maximo 10MB",
   "upload_req_format": "Formato PNG, JPEG, WebP o SVG",
   "landing_hero_line1": "Genera",

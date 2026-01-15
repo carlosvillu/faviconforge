@@ -164,11 +164,14 @@ export async function validateImage(
   // Step 3: Load and validate dimensions
   try {
     const dimensions = await loadImageDimensions(file)
-    const dimensionResult = validateImageDimensions(
-      dimensions.width,
-      dimensions.height,
-      options?.minDimensionPx
-    )
+    const dimensionResult =
+      file.type === 'image/svg+xml'
+        ? validateImageDimensions(dimensions.width, dimensions.height, 0)
+        : validateImageDimensions(
+            dimensions.width,
+            dimensions.height,
+            options?.minDimensionPx
+          )
     if (!dimensionResult.valid) {
       return dimensionResult
     }
