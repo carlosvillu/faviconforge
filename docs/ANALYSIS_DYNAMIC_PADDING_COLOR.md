@@ -214,6 +214,226 @@ Usar Sharp (ya instalado para generación de ICO) en el servidor para extraer co
 
 ---
 
+### 3.4 Opción D: color-thief-node + Sharp Server-side (Ejemplo Propuesto)
+
+**Descripción:**
+Implementación server-side usando `color-thief-node` para extracción de color y `sharp` para generar el maskable con padding dinámico. Este es el enfoque mostrado en el ejemplo del usuario.
+
+#### Código de Referencia:
+```typescript
+const sharp = require('sharp');
+const { getColorFromFile } = require('color-thief-node');
+
+async function generateMaskableWithBorderColor(sourcePath, outputPath, size = 512) {
+  // 1. Detecta color dominante
+  const dominantColor = await getColorFromFile(sourcePath);
+
+  // 2. Crea canvas SVG con ese color
+  const backgroundBuffer = Buffer.from(`
+    <svg width="${size}" height="${size}">
+      <rect width="${size}" height="${size}" fill="rgb(${dominantColor.join(', ')})" />
+    </svg>`
+  );
+
+  // 3. Redimensiona logo a 80% y compone sobre fondo
+  const safeSize = Math.round(size * 0.8);
+  const padding = Math.round(size * 0.1);
+
+  await sharp(sourcePath)
+    .resize(safeSize, safeSize, { fit: 'contain' })
+    .toBuffer()
+    .then(resized =>
+      sharp(backgroundBuffer)
+        .composite([{ input: resized, top: padding, left: padding }])
+        .png()
+        .toFile(outputPath)
+    );
+}
+```
+
+#### Pros:
+- ✅ **Código muy simple** (~20 líneas funcionales)
+- ✅ **Sharp ya instalado** (usamos para ICO generation)
+- ✅ **Librería probada** (color-thief-node: 440k descargas semanales)
+- ✅ **Composición nativa** (Sharp maneja el composite eficientemente)
+- ✅ **Alta calidad** (Sharp produce imágenes de mejor calidad que Canvas)
+
+#### Contras:
+- ⚠️ **CAMBIO ARQUITECTÓNICO MAYOR:**
+  - Actual: Generación **client-side** con Canvas API
+  - Propuesto: Generación **server-side** con Sharp
+  - Requiere migrar TODA la generación de maskables al servidor
+- ⚠️ **Nueva dependencia:** `color-thief-node` (~200KB)
+- ⚠️ **Latencia adicional:**
+  - Cliente sube imagen → Servidor detecta color → Servidor genera → Cliente descarga
+  - Vs. actual: Todo en cliente (sin latencia red)
+- ⚠️ **Complejidad de deployment:**
+  - Sharp requiere binarios nativos (puede fallar en algunos hosts)
+  - Ya tenemos este problema con ICO, pero ICO es opcional (fallback a ZIP sin ICO)
+  - Los maskables son core del producto (no pueden fallar)
+- ⚠️ **Color dominante GLOBAL, no del borde:**
+  - `getColorFromFile()` analiza toda la imagen, no solo el borde
+  - Para una imagen con logo rojo y borde azul → detectará rojo (no azul)
+  - Necesitaríamos pre-crop del borde con `sharp.extract()` → más complejo
+
+#### Flujo de Implementación:
+
+**Nuevo endpoint:**
+```typescript
+// app/routes/api/favicon/maskable.server.ts
+export async function action({ request }: ActionFunctionArgs) {
+  const formData = await request.formData()
+  const imageBlob = formData.get('image') as File
+  const size = parseInt(formData.get('size') as string)
+
+  // 1. Guardar temporalmente
+  const tempPath = await saveTempFile(imageBlob)
+
+  // 2. Detectar color (GLOBAL, no borde)
+  const dominantColor = await getColorFromFile(tempPath)
+
+  // 3. Generar maskable con Sharp
+  const outputPath = `${tempPath}-maskable-${size}.png`
+  await generateMaskableWithBorderColor(tempPath, outputPath, size)
+
+  // 4. Devolver PNG generado
+  const buffer = await fs.readFile(outputPath)
+  return new Response(buffer, {
+    headers: { 'Content-Type': 'image/png' }
+  })
+}
+```
+
+**Cliente debe cambiar:**
+```typescript
+// ANTES (actual):
+export async function generateMaskableIcon(
+  imageData: Blob,
+  size: number,
+  backgroundColor: string
+): Promise<Blob> {
+  // ... Canvas API client-side
+}
+
+// DESPUÉS (con Opción D):
+export async function generateMaskableIcon(
+  imageData: Blob,
+  size: number,
+  autoDetectColor: boolean
+): Promise<Blob> {
+  if (!autoDetectColor) {
+    // Mantener Canvas API para color manual
+    return generateMaskableIconCanvas(imageData, size, backgroundColor)
+  }
+
+  // Llamar al servidor
+  const formData = new FormData()
+  formData.append('image', imageData)
+  formData.append('size', size.toString())
+
+  const response = await fetch('/api/favicon/maskable', {
+    method: 'POST',
+    body: formData
+  })
+
+  return response.blob()
+}
+```
+
+#### Complejidad estimada:
+- **Endpoint API:** 🟡 MEDIA (0.5 día)
+- **Migración arquitectónica:** 🔴 ALTA (1 día)
+  - Mantener Canvas fallback para color manual
+  - Manejar errores de red
+  - Manejar errores de Sharp (binarios nativos)
+- **Extracción de borde (no global):** 🟡 MEDIA (0.5 día)
+  - Usar `sharp.extract()` para crop del borde
+  - Pasar crop a color-thief
+- **Testing E2E:** 🟡 MEDIA (0.5 día)
+- **Total:** 🔴 ALTA (2.5-3 días)
+
+#### Problema Crítico: Color Global vs Borde
+
+El ejemplo usa `getColorFromFile(sourcePath)` que analiza **toda la imagen**, no solo el borde:
+
+```typescript
+// Ejemplo imagen:
+// ┌─────────────────┐
+// │ BORDE AZUL     │  ← Queremos este color
+// │ ┌───────────┐  │
+// │ │ LOGO ROJO │  │  ← color-thief detectará ESTE
+// │ └───────────┘  │
+// └─────────────────┘
+
+const dominantColor = await getColorFromFile('logo.png')
+// Resultado: [255, 0, 0] (rojo del logo)
+// Esperado: [0, 0, 255] (azul del borde)
+```
+
+**Solución requerida:**
+```typescript
+// 1. Extraer solo el borde con Sharp
+const borderImage = await sharp(sourcePath)
+  .extract({
+    left: 0,
+    top: 0,
+    width: fullWidth,
+    height: 10  // Solo primeros 10px
+  })
+  .toFile('border-temp.png')
+
+// 2. Analizar solo el borde
+const dominantColor = await getColorFromFile('border-temp.png')
+
+// Repetir para los 4 lados y promediar
+```
+
+Esto añade **complejidad significativa** y múltiples operaciones I/O.
+
+---
+
+### 3.5 Comparativa de Opciones
+
+| Criterio | Opción A (Canvas API) | Opción B (Librería client) | Opción C (Sharp stats) | **Opción D (color-thief + Sharp)** |
+|----------|----------------------|---------------------------|------------------------|-------------------------------------|
+| **Complejidad** | 🟡 Media (2-3 días) | 🟢 Baja (1 día) | 🟡 Media (2 días) | 🔴 Alta (2.5-3 días) |
+| **Dependencias** | ✅ 0 | ⚠️ +1 npm | ✅ 0 (ya existe) | ⚠️ +1 npm |
+| **Bundle size** | ✅ 0KB | ⚠️ +300KB | ✅ 0KB (server) | ✅ 0KB (server) |
+| **Arquitectura** | ✅ Sin cambios | ✅ Sin cambios | ⚠️ Cambio mayor | 🔴 Cambio mayor |
+| **Latencia** | ✅ 0ms (cliente) | ✅ 0ms (cliente) | ⚠️ ~200-500ms red | ⚠️ ~200-500ms red |
+| **Calidad imagen** | 🟡 Buena (Canvas) | 🟡 Buena (Canvas) | ✅ Excelente (Sharp) | ✅ Excelente (Sharp) |
+| **Detección borde** | ✅ Implementable | ✅ Implementable | ⚠️ Complejo | ⚠️ Requiere extract() |
+| **Fallback offline** | ✅ Funciona | ✅ Funciona | ❌ Requiere red | ❌ Requiere red |
+| **Sharp binarios** | ✅ N/A | ✅ N/A | ⚠️ Riesgo deploy | ⚠️ Riesgo deploy |
+
+---
+
+### 3.6 Evaluación del Ejemplo del Usuario
+
+**Ventajas del código mostrado:**
+1. ✅ Muy elegante y conciso (~20 líneas)
+2. ✅ Usa herramientas probadas
+3. ✅ Sharp ya está en el proyecto
+
+**Limitaciones para nuestro caso:**
+1. ❌ **Detecta color GLOBAL, no del borde**
+   - Para logos con fondo transparente: OK
+   - Para logos con borde de color diferente al contenido: NO OK
+2. ❌ **Cambio arquitectónico mayor**
+   - Actual: 100% client-side (offline-first)
+   - Propuesto: Requiere servidor (no funciona offline)
+3. ❌ **Duplicación de lógica:**
+   - Necesitamos mantener Canvas para color manual
+   - Sharp solo para auto-detect → 2 pipelines paralelos
+
+**Cuándo usar este enfoque:**
+- ✅ Si la aplicación YA genera iconos server-side
+- ✅ Si el color global de la imagen es aceptable (no necesitamos específicamente el borde)
+- ✅ Si la latencia de red es aceptable
+- ❌ **NO en nuestro caso:** Generamos client-side para performance/offline
+
+---
+
 ## 4. Casos Edge a Considerar
 
 ### 4.1 Transparencia en el Borde
@@ -359,15 +579,18 @@ describe('extractDominantEdgeColor', () => {
 
 ## 7. Resumen de Complejidad por Opción
 
-| Aspecto | Opción A (Canvas API) | Opción B (Librería) | Opción C (Server-side) |
-|---------|----------------------|---------------------|------------------------|
-| **Desarrollo** | 🟡 Media (2-3 días) | 🟢 Baja (1 día) | 🟡 Media (2 días) |
-| **Testing** | 🟡 Media (1 día) | 🟢 Baja (0.5 día) | 🟡 Media (1 día) |
-| **Dependencias** | ✅ Ninguna | ⚠️ +1 NPM pkg | ✅ Ya existe (Sharp) |
-| **Performance** | ✅ Rápida (client) | ✅ Rápida (client) | ⚠️ Latencia red |
-| **Mantenimiento** | ✅ Control total | ⚠️ Depende 3rd party | ✅ Stack existente |
-| **Edge cases** | ⚠️ Requiere manejo | ✅ Manejado por lib | ⚠️ Requiere manejo |
-| **Bundle size** | ✅ 0KB | ⚠️ +100-500KB | ✅ 0KB (server) |
+| Aspecto | Opción A (Canvas API) | Opción B (Librería client) | Opción C (Sharp stats) | Opción D (color-thief+Sharp) |
+|---------|----------------------|---------------------------|------------------------|------------------------------|
+| **Desarrollo** | 🟡 Media (2-3 días) | 🟢 Baja (1 día) | 🟡 Media (2 días) | 🔴 Alta (2.5-3 días) |
+| **Testing** | 🟡 Media (1 día) | 🟢 Baja (0.5 día) | 🟡 Media (1 día) | 🟡 Media (0.5 día) |
+| **Dependencias** | ✅ Ninguna | ⚠️ +1 NPM pkg | ✅ Ya existe (Sharp) | ⚠️ +1 NPM pkg |
+| **Performance** | ✅ Rápida (client) | ✅ Rápida (client) | ⚠️ Latencia red | ⚠️ Latencia red |
+| **Mantenimiento** | ✅ Control total | ⚠️ Depende 3rd party | ✅ Stack existente | ⚠️ Depende 3rd party |
+| **Edge cases** | ⚠️ Requiere manejo | ✅ Manejado por lib | ⚠️ Requiere manejo | ⚠️ Color global (no borde) |
+| **Bundle size** | ✅ 0KB | ⚠️ +100-500KB | ✅ 0KB (server) | ✅ 0KB (server) |
+| **Arquitectura** | ✅ Sin cambios | ✅ Sin cambios | 🔴 Cambio mayor | 🔴 Cambio mayor |
+| **Offline** | ✅ Funciona | ✅ Funciona | ❌ Requiere red | ❌ Requiere red |
+| **Detección borde** | ✅ Específica | ✅ Específica | ⚠️ Complejo | ❌ Global (requiere extract) |
 
 ---
 
@@ -377,10 +600,39 @@ describe('extractDominantEdgeColor', () => {
 
 #### Justificación:
 
-1. **Sin dependencias externas:** Mantiene el bundle ligero
-2. **Control total:** Podemos optimizar específicamente para bordes (no paleta completa)
-3. **Stack coherente:** Ya usamos Canvas API extensivamente
-4. **Testeable:** Infraestructura de mocks ya existe
+1. **Sin dependencias externas:** Mantiene el bundle ligero (0KB adicionales)
+2. **Control total:** Podemos optimizar específicamente para bordes (no color global)
+3. **Stack coherente:** Ya usamos Canvas API extensivamente en `faviconGeneration.ts`
+4. **Testeable:** Infraestructura de mocks ya existe en `/tests/unit/faviconGeneration.test.ts`
+5. **Arquitectura preservada:** Mantiene generación 100% client-side (offline-first, latencia cero)
+6. **Sin riesgos de deployment:** No añade dependencias de binarios nativos como Sharp
+
+#### ¿Por qué NO la Opción D (color-thief-node + Sharp)?
+
+Aunque el ejemplo del usuario es **elegante y conciso**, tiene limitaciones críticas:
+
+1. **Detecta color GLOBAL, no del borde:**
+   - `getColorFromFile()` analiza toda la imagen
+   - Un logo rojo con borde azul → detectará rojo (incorrecto)
+   - Necesitaría `sharp.extract()` para crop → múltiples operaciones I/O
+
+2. **Cambio arquitectónico NO justificado:**
+   - Actual: Generación client-side (rápida, offline)
+   - Propuesto: Server-side (latencia ~200-500ms, requiere red)
+   - Ganar: Simplicidad de código (~20 líneas)
+   - Perder: Performance, offline capability, user experience
+
+3. **Duplicación de lógica:**
+   - Mantener Canvas para color manual
+   - Añadir Sharp para auto-detect
+   - 2 pipelines paralelos = mayor superficie de bugs
+
+4. **Sharp es riesgo en producción:**
+   - ICO generation es opcional (fallback a ZIP sin ICO si Sharp falla)
+   - Maskables son **core del producto** (no pueden fallar)
+   - Binarios nativos pueden fallar en hosting específicos
+
+**Conclusión:** El ejemplo es excelente para aplicaciones server-first, pero **no encaja** con nuestra arquitectura client-first.
 
 #### Estrategia de Implementación:
 
@@ -595,6 +847,61 @@ La implementación de padding dinámico basado en color predominante del borde e
 3. Implementar Fase 1 (MVP)
 4. Testing y refinamiento
 5. Evaluar Fase 2 según feedback de usuarios
+
+---
+
+## 14. Opción Híbrida (Consideración Adicional)
+
+Si queremos la simplicidad del ejemplo del usuario pero manteniendo la arquitectura client-side, podríamos usar **`colorthief`** (versión browser) en lugar de `color-thief-node`:
+
+```typescript
+import ColorThief from 'colorthief'
+
+export async function generateMaskableIcon(
+  imageData: Blob,
+  size: number,
+  autoDetectColor: boolean,
+  manualColor?: string
+): Promise<Blob> {
+  const img = await loadImage(imageData)
+
+  let backgroundColor: string
+
+  if (autoDetectColor) {
+    const colorThief = new ColorThief()
+    const [r, g, b] = colorThief.getColor(img)
+    backgroundColor = `rgb(${r}, ${g}, ${b})`
+  } else {
+    backgroundColor = manualColor || '#ffffff'
+  }
+
+  // Resto del código Canvas actual...
+  const canvas = document.createElement('canvas')
+  canvas.width = size
+  canvas.height = size
+  const ctx = canvas.getContext('2d')!
+
+  ctx.fillStyle = backgroundColor
+  ctx.fillRect(0, 0, size, size)
+
+  const scaledSize = size * 0.8
+  const offset = (size - scaledSize) / 2
+
+  ctx.imageSmoothingQuality = 'high'
+  ctx.drawImage(img, offset, offset, scaledSize, scaledSize)
+
+  return canvasToBlob(canvas)
+}
+```
+
+**Esta opción combina:**
+- ✅ Simplicidad de librería (Opción B)
+- ✅ Arquitectura client-side (como Opción A)
+- ✅ Sin latencia de red
+- ⚠️ Pero: Color GLOBAL, no específico del borde
+- ⚠️ Bundle size: +300KB
+
+**Recomendación:** Solo considerar si priorizamos simplicidad de desarrollo sobre detección precisa del borde.
 
 ---
 
