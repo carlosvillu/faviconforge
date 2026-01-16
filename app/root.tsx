@@ -37,7 +37,13 @@ import { getAnalyticsInitScript, trackPageView } from '~/lib/analytics'
 import { useLoginCompleteTracking } from '~/hooks/useLoginCompleteTracking'
 
 export const links: Route.LinksFunction = () => [
-  { rel: 'icon', type: 'image/svg+xml', href: '/favicon-b.svg' },
+  { rel: 'icon', type: 'image/png', sizes: '16x16', href: '/web/favicon-16x16.png' },
+  { rel: 'icon', type: 'image/png', sizes: '32x32', href: '/web/favicon-32x32.png' },
+  { rel: 'icon', type: 'image/png', sizes: '48x48', href: '/web/favicon-48x48.png' },
+  { rel: 'apple-touch-icon', sizes: '180x180', href: '/ios/apple-touch-icon.png' },
+  { rel: 'icon', type: 'image/png', sizes: '192x192', href: '/android/icon-192.png' },
+  { rel: 'icon', type: 'image/png', sizes: '512x512', href: '/android/icon-512.png' },
+  { rel: 'manifest', href: '/manifest.json' },
   { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
   {
     rel: 'preconnect',
@@ -48,6 +54,12 @@ export const links: Route.LinksFunction = () => [
     rel: 'stylesheet',
     href: 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap',
   },
+]
+
+export const meta: Route.MetaFunction = () => [
+  { name: 'msapplication-TileImage', content: '/windows/mstile-150x150.png' },
+  { name: 'msapplication-config', content: '/browserconfig.xml' },
+  { name: 'theme-color', content: '#ffffff' },
 ]
 
 // Server-side i18n instance cache (per-request in production)

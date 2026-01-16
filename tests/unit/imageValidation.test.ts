@@ -271,10 +271,8 @@ describe('validateImage (integration)', () => {
       text: async () => svgContent,
     } as File
     const result = await validateImage(file)
-    expect(result.valid).toBe(false)
-    if (!result.valid) {
-      expect(result.errorKey).toBe('image_too_small')
-    }
+    // SVG validation has been relaxed (minDimension = 0)
+    expect(result.valid).toBe(true)
   })
 
   it('fails for non-square SVG', async () => {
