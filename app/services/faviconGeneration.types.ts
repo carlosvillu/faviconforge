@@ -35,8 +35,8 @@ export type FaviconGenerationOptions = {
 
 // Constants
 export const FREE_SIZES = [16, 32, 48] as const
-export const PREMIUM_SIZES = [180, 192, 512, 150] as const
-export const MASKABLE_SIZES = [192, 512] as const
+export const PREMIUM_SIZES = [180, 192, 384, 512, 1024, 150] as const
+export const MASKABLE_SIZES = [192, 384, 512, 1024] as const
 
 export const DEFAULT_MANIFEST_OPTIONS: ManifestOptions = {
   name: 'My App',

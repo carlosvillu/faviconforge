@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   canvasToBlob,
+  extractDominantBorderColor,
   generateAllFormats,
   generateBrowserConfig,
   generateHTMLSnippet,
@@ -20,6 +21,11 @@ const mockContext = {
   fillRect: vi.fn(),
   fillStyle: '',
   imageSmoothingQuality: 'high' as ImageSmoothingQuality,
+  getImageData: vi.fn(() => ({
+    data: new Uint8ClampedArray(512 * 512 * 4), // Default 512x512 image with transparent pixels
+    width: 512,
+    height: 512,
+  })),
 }
 
 beforeEach(() => {
@@ -163,14 +169,14 @@ describe('faviconGeneration', () => {
     it('should generate all formats for premium', async () => {
       const results = await generatePNGFormats(validBlob, true)
 
-      expect(results).toHaveLength(7)
+      expect(results).toHaveLength(9)
       const successResults = results.filter((r) => r.success)
-      expect(successResults).toHaveLength(7)
+      expect(successResults).toHaveLength(9)
 
       if (successResults.every((r) => r.success)) {
         const formats = successResults.map((r) => r.success && r.format)
         const premiumFormats = formats.filter((f) => f && f.tier === 'premium')
-        expect(premiumFormats).toHaveLength(4)
+        expect(premiumFormats).toHaveLength(6)
       }
     })
   })
@@ -179,15 +185,17 @@ describe('faviconGeneration', () => {
     it('should generate maskable icons for both sizes', async () => {
       const results = await generateMaskableFormats(validBlob, '#ffffff')
 
-      expect(results).toHaveLength(2)
+      expect(results).toHaveLength(4)
       const successResults = results.filter((r) => r.success)
-      expect(successResults).toHaveLength(2)
+      expect(successResults).toHaveLength(4)
 
       if (successResults.every((r) => r.success)) {
         const formats = successResults.map((r) => r.success && r.format)
         expect(formats.map((f) => f && f.name)).toEqual([
-          'maskable-icon-192.png',
-          'maskable-icon-512.png',
+          'icon-192-maskable.png',
+          'icon-384-maskable.png',
+          'icon-512-maskable.png',
+          'icon-1024-maskable.png',
         ])
       }
     })
@@ -211,7 +219,7 @@ describe('faviconGeneration', () => {
       expect(manifest.background_color).toBe('#ffffff')
       expect(manifest.display).toBe('standalone')
       expect(manifest.start_url).toBe('/')
-      expect(manifest.icons).toHaveLength(4)
+      expect(manifest.icons).toHaveLength(8)
     })
   })
 
@@ -249,6 +257,254 @@ describe('faviconGeneration', () => {
       expect(html).toContain('apple-touch-icon.png')
       expect(html).toContain('manifest.json')
       expect(html).toContain('browserconfig.xml')
+    })
+  })
+
+  describe('extractDominantBorderColor', () => {
+    it('should return most frequent border color', async () => {
+      // Mock getImageData to return a red border (255, 0, 0, 255)
+      const width = 100
+      const height = 100
+      const imageDataArray = new Uint8ClampedArray(width * height * 4)
+
+      // Fill entire image with transparent pixels first
+      for (let i = 0; i < imageDataArray.length; i += 4) {
+        imageDataArray[i] = 0
+        imageDataArray[i + 1] = 0
+        imageDataArray[i + 2] = 0
+        imageDataArray[i + 3] = 0
+      }
+
+      // Fill border with red (top, bottom, left, right edges)
+      // Top row
+      for (let x = 0; x < width; x++) {
+        const i = (0 * width + x) * 4
+        imageDataArray[i] = 255
+        imageDataArray[i + 1] = 0
+        imageDataArray[i + 2] = 0
+        imageDataArray[i + 3] = 255
+      }
+      // Bottom row
+      for (let x = 0; x < width; x++) {
+        const i = ((height - 1) * width + x) * 4
+        imageDataArray[i] = 255
+        imageDataArray[i + 1] = 0
+        imageDataArray[i + 2] = 0
+        imageDataArray[i + 3] = 255
+      }
+      // Left column
+      for (let y = 1; y < height - 1; y++) {
+        const i = (y * width + 0) * 4
+        imageDataArray[i] = 255
+        imageDataArray[i + 1] = 0
+        imageDataArray[i + 2] = 0
+        imageDataArray[i + 3] = 255
+      }
+      // Right column
+      for (let y = 1; y < height - 1; y++) {
+        const i = (y * width + (width - 1)) * 4
+        imageDataArray[i] = 255
+        imageDataArray[i + 1] = 0
+        imageDataArray[i + 2] = 0
+        imageDataArray[i + 3] = 255
+      }
+
+      const mockGetImageData = vi.fn(() => ({
+        data: imageDataArray,
+        width,
+        height,
+      }))
+
+      HTMLCanvasElement.prototype.getContext = vi.fn(() => ({
+        ...mockContext,
+        drawImage: vi.fn(),
+        getImageData: mockGetImageData,
+      })) as unknown as typeof HTMLCanvasElement.prototype.getContext
+
+      global.Image = class {
+        onload: (() => void) | null = null
+        onerror: (() => void) | null = null
+        src = ''
+        width = width
+        height = height
+        crossOrigin = ''
+
+        constructor() {
+          setTimeout(() => this.onload?.(), 0)
+        }
+      } as unknown as typeof Image
+
+      const color = await extractDominantBorderColor(validBlob)
+      expect(color).toBe('#ff0000')
+    })
+
+    it('should ignore transparent pixels', async () => {
+      // Mock image with mixed border: some transparent, some blue
+      const width = 100
+      const height = 100
+      const imageDataArray = new Uint8ClampedArray(width * height * 4)
+
+      // Fill with transparent
+      for (let i = 0; i < imageDataArray.length; i += 4) {
+        imageDataArray[i] = 0
+        imageDataArray[i + 1] = 0
+        imageDataArray[i + 2] = 0
+        imageDataArray[i + 3] = 0
+      }
+
+      // Fill top half of border with blue (opaque)
+      for (let x = 0; x < width / 2; x++) {
+        const i = (0 * width + x) * 4
+        imageDataArray[i] = 0
+        imageDataArray[i + 1] = 0
+        imageDataArray[i + 2] = 255
+        imageDataArray[i + 3] = 255
+      }
+      // Bottom row blue
+      for (let x = 0; x < width; x++) {
+        const i = ((height - 1) * width + x) * 4
+        imageDataArray[i] = 0
+        imageDataArray[i + 1] = 0
+        imageDataArray[i + 2] = 255
+        imageDataArray[i + 3] = 255
+      }
+
+      const mockGetImageData = vi.fn(() => ({
+        data: imageDataArray,
+        width,
+        height,
+      }))
+
+      HTMLCanvasElement.prototype.getContext = vi.fn(() => ({
+        ...mockContext,
+        drawImage: vi.fn(),
+        getImageData: mockGetImageData,
+      })) as unknown as typeof HTMLCanvasElement.prototype.getContext
+
+      global.Image = class {
+        onload: (() => void) | null = null
+        onerror: (() => void) | null = null
+        src = ''
+        width = width
+        height = height
+        crossOrigin = ''
+
+        constructor() {
+          setTimeout(() => this.onload?.(), 0)
+        }
+      } as unknown as typeof Image
+
+      const color = await extractDominantBorderColor(validBlob)
+      expect(color).toBe('#0000ff')
+    })
+
+    it('should return white fallback when all border pixels are transparent', async () => {
+      const width = 100
+      const height = 100
+      const imageDataArray = new Uint8ClampedArray(width * height * 4)
+
+      // Fill entire image with transparent pixels (alpha = 0)
+      for (let i = 0; i < imageDataArray.length; i += 4) {
+        imageDataArray[i] = 0
+        imageDataArray[i + 1] = 0
+        imageDataArray[i + 2] = 0
+        imageDataArray[i + 3] = 0
+      }
+
+      const mockGetImageData = vi.fn(() => ({
+        data: imageDataArray,
+        width,
+        height,
+      }))
+
+      HTMLCanvasElement.prototype.getContext = vi.fn(() => ({
+        ...mockContext,
+        drawImage: vi.fn(),
+        getImageData: mockGetImageData,
+      })) as unknown as typeof HTMLCanvasElement.prototype.getContext
+
+      global.Image = class {
+        onload: (() => void) | null = null
+        onerror: (() => void) | null = null
+        src = ''
+        width = width
+        height = height
+        crossOrigin = ''
+
+        constructor() {
+          setTimeout(() => this.onload?.(), 0)
+        }
+      } as unknown as typeof Image
+
+      const color = await extractDominantBorderColor(validBlob)
+      expect(color).toBe('#ffffff')
+    })
+
+    it('should pick most frequent color in multi-color border', async () => {
+      const width = 100
+      const height = 100
+      const imageDataArray = new Uint8ClampedArray(width * height * 4)
+
+      // Fill with transparent
+      for (let i = 0; i < imageDataArray.length; i += 4) {
+        imageDataArray[i] = 0
+        imageDataArray[i + 1] = 0
+        imageDataArray[i + 2] = 0
+        imageDataArray[i + 3] = 0
+      }
+
+      // Fill 60% of border with red, 40% with blue
+      // Top row: 60% red, 40% blue
+      for (let x = 0; x < width * 0.6; x++) {
+        const i = (0 * width + x) * 4
+        imageDataArray[i] = 255
+        imageDataArray[i + 1] = 0
+        imageDataArray[i + 2] = 0
+        imageDataArray[i + 3] = 255
+      }
+      for (let x = Math.floor(width * 0.6); x < width; x++) {
+        const i = (0 * width + x) * 4
+        imageDataArray[i] = 0
+        imageDataArray[i + 1] = 0
+        imageDataArray[i + 2] = 255
+        imageDataArray[i + 3] = 255
+      }
+      // Bottom row: all red (to ensure red dominates)
+      for (let x = 0; x < width; x++) {
+        const i = ((height - 1) * width + x) * 4
+        imageDataArray[i] = 255
+        imageDataArray[i + 1] = 0
+        imageDataArray[i + 2] = 0
+        imageDataArray[i + 3] = 255
+      }
+
+      const mockGetImageData = vi.fn(() => ({
+        data: imageDataArray,
+        width,
+        height,
+      }))
+
+      HTMLCanvasElement.prototype.getContext = vi.fn(() => ({
+        ...mockContext,
+        drawImage: vi.fn(),
+        getImageData: mockGetImageData,
+      })) as unknown as typeof HTMLCanvasElement.prototype.getContext
+
+      global.Image = class {
+        onload: (() => void) | null = null
+        onerror: (() => void) | null = null
+        src = ''
+        width = width
+        height = height
+        crossOrigin = ''
+
+        constructor() {
+          setTimeout(() => this.onload?.(), 0)
+        }
+      } as unknown as typeof Image
+
+      const color = await extractDominantBorderColor(validBlob)
+      expect(color).toBe('#ff0000')
     })
   })
 
@@ -302,6 +558,109 @@ describe('faviconGeneration', () => {
 
       expect(result.formats.length).toBeLessThan(3)
       expect(result.warnings.length).toBeGreaterThan(0)
+    })
+
+    it('should use extracted border color for maskable icons instead of backgroundColor', async () => {
+      // Mock image with green border
+      const width = 100
+      const height = 100
+      const imageDataArray = new Uint8ClampedArray(width * height * 4)
+
+      // Fill with transparent
+      for (let i = 0; i < imageDataArray.length; i += 4) {
+        imageDataArray[i] = 0
+        imageDataArray[i + 1] = 0
+        imageDataArray[i + 2] = 0
+        imageDataArray[i + 3] = 0
+      }
+
+      // Fill border with green (0, 255, 0, 255)
+      // Top row
+      for (let x = 0; x < width; x++) {
+        const i = (0 * width + x) * 4
+        imageDataArray[i] = 0
+        imageDataArray[i + 1] = 255
+        imageDataArray[i + 2] = 0
+        imageDataArray[i + 3] = 255
+      }
+      // Bottom row
+      for (let x = 0; x < width; x++) {
+        const i = ((height - 1) * width + x) * 4
+        imageDataArray[i] = 0
+        imageDataArray[i + 1] = 255
+        imageDataArray[i + 2] = 0
+        imageDataArray[i + 3] = 255
+      }
+      // Left column
+      for (let y = 1; y < height - 1; y++) {
+        const i = (y * width + 0) * 4
+        imageDataArray[i] = 0
+        imageDataArray[i + 1] = 255
+        imageDataArray[i + 2] = 0
+        imageDataArray[i + 3] = 255
+      }
+      // Right column
+      for (let y = 1; y < height - 1; y++) {
+        const i = (y * width + (width - 1)) * 4
+        imageDataArray[i] = 0
+        imageDataArray[i + 1] = 255
+        imageDataArray[i + 2] = 0
+        imageDataArray[i + 3] = 255
+      }
+
+      // Track calls to getContext and getImageData
+      const mockGetImageData = vi.fn(() => ({
+        data: imageDataArray,
+        width,
+        height,
+      }))
+
+      // Track fillStyle to verify the color used
+      let capturedFillStyle = ''
+      const enhancedMockContext = {
+        ...mockContext,
+        drawImage: vi.fn(),
+        getImageData: mockGetImageData,
+        fillRect: vi.fn(),
+        get fillStyle() {
+          return capturedFillStyle
+        },
+        set fillStyle(value: string) {
+          capturedFillStyle = value
+        },
+      }
+
+      HTMLCanvasElement.prototype.getContext = vi.fn(() => enhancedMockContext) as unknown as typeof HTMLCanvasElement.prototype.getContext
+
+      global.Image = class {
+        onload: (() => void) | null = null
+        onerror: (() => void) | null = null
+        src = ''
+        width = width
+        height = height
+        crossOrigin = ''
+
+        constructor() {
+          setTimeout(() => this.onload?.(), 0)
+        }
+      } as unknown as typeof Image
+
+      const result = await generateAllFormats({
+        imageData: validBlob,
+        isPremium: true,
+        manifestOptions: {
+          name: 'My App',
+          shortName: 'App',
+          themeColor: '#000000',
+          backgroundColor: '#ffffff', // White, but should NOT be used for maskable padding
+        },
+      })
+
+      // The fillStyle should be green (#00ff00), NOT white (#ffffff)
+      expect(capturedFillStyle).toBe('#00ff00')
+
+      // Verify manifest still uses the backgroundColor from manifestOptions
+      expect(result.manifest).toContain('"background_color": "#ffffff"')
     })
   })
 })

@@ -15,6 +15,106 @@ import {
 // ============ LOW-LEVEL UTILITIES ============
 
 /**
+ * Converts RGB values to hex color string
+ */
+function rgbToHex(r: number, g: number, b: number): string {
+  return '#' + r.toString(16).padStart(2, '0') + g.toString(16).padStart(2, '0') + b.toString(16).padStart(2, '0')
+}
+
+/**
+ * Extracts the dominant color from the 1px border of an image
+ * Returns the most frequent opaque color as hex, or '#ffffff' if all pixels are transparent
+ */
+export async function extractDominantBorderColor(imageData: Blob): Promise<string> {
+  const img = await loadImage(imageData)
+  const canvas = document.createElement('canvas')
+  canvas.width = img.width
+  canvas.height = img.height
+  const ctx = canvas.getContext('2d')
+  if (!ctx) {
+    throw new Error('Failed to get canvas context')
+  }
+
+  ctx.drawImage(img, 0, 0)
+  const data = ctx.getImageData(0, 0, img.width, img.height).data
+
+  // Count color frequencies
+  const colorCount = new Map<string, number>()
+
+  // Extract border pixels (1px wide)
+  const width = img.width
+  const height = img.height
+
+  // Top row (y=0, x=0 to width-1)
+  for (let x = 0; x < width; x++) {
+    const i = (0 * width + x) * 4
+    const r = data[i]
+    const g = data[i + 1]
+    const b = data[i + 2]
+    const a = data[i + 3]
+    if (a >= 128) {
+      const hex = rgbToHex(r, g, b)
+      colorCount.set(hex, (colorCount.get(hex) || 0) + 1)
+    }
+  }
+
+  // Bottom row (y=height-1, x=0 to width-1)
+  for (let x = 0; x < width; x++) {
+    const i = ((height - 1) * width + x) * 4
+    const r = data[i]
+    const g = data[i + 1]
+    const b = data[i + 2]
+    const a = data[i + 3]
+    if (a >= 128) {
+      const hex = rgbToHex(r, g, b)
+      colorCount.set(hex, (colorCount.get(hex) || 0) + 1)
+    }
+  }
+
+  // Left column (x=0, y=1 to height-2, corners already counted)
+  for (let y = 1; y < height - 1; y++) {
+    const i = (y * width + 0) * 4
+    const r = data[i]
+    const g = data[i + 1]
+    const b = data[i + 2]
+    const a = data[i + 3]
+    if (a >= 128) {
+      const hex = rgbToHex(r, g, b)
+      colorCount.set(hex, (colorCount.get(hex) || 0) + 1)
+    }
+  }
+
+  // Right column (x=width-1, y=1 to height-2, corners already counted)
+  for (let y = 1; y < height - 1; y++) {
+    const i = (y * width + (width - 1)) * 4
+    const r = data[i]
+    const g = data[i + 1]
+    const b = data[i + 2]
+    const a = data[i + 3]
+    if (a >= 128) {
+      const hex = rgbToHex(r, g, b)
+      colorCount.set(hex, (colorCount.get(hex) || 0) + 1)
+    }
+  }
+
+  // Find most frequent color
+  if (colorCount.size === 0) {
+    return '#ffffff' // Fallback if all border pixels are transparent
+  }
+
+  let maxCount = 0
+  let dominantColor = '#ffffff'
+  for (const [color, count] of colorCount.entries()) {
+    if (count > maxCount) {
+      maxCount = count
+      dominantColor = color
+    }
+  }
+
+  return dominantColor
+}
+
+/**
  * Loads an image from a Blob
  */
 export function loadImage(source: Blob): Promise<HTMLImageElement> {
@@ -136,7 +236,9 @@ export async function generatePNGFormats(
     48: { name: 'favicon-48x48.png', path: 'web/', tier: 'free' },
     180: { name: 'apple-touch-icon.png', path: 'ios/', tier: 'premium' },
     192: { name: 'icon-192.png', path: 'android/', tier: 'premium' },
+    384: { name: 'icon-384.png', path: 'android/', tier: 'premium' },
     512: { name: 'icon-512.png', path: 'android/', tier: 'premium' },
+    1024: { name: 'icon-1024.png', path: 'android/', tier: 'premium' },
     150: { name: 'mstile-150x150.png', path: 'windows/', tier: 'premium' },
   }
 
@@ -178,8 +280,10 @@ export async function generateMaskableFormats(
   backgroundColor: string
 ): Promise<GenerationResult[]> {
   const sizeToFormat: Record<number, { name: string; path: string }> = {
-    192: { name: 'maskable-icon-192.png', path: 'android/' },
-    512: { name: 'maskable-icon-512.png', path: 'android/' },
+    192: { name: 'icon-192-maskable.png', path: 'android/' },
+    384: { name: 'icon-384-maskable.png', path: 'android/' },
+    512: { name: 'icon-512-maskable.png', path: 'android/' },
+    1024: { name: 'icon-1024-maskable.png', path: 'android/' },
   }
 
   const results = await Promise.allSettled(
@@ -230,21 +334,47 @@ export function generateManifest(options: ManifestOptions): string {
         src: '/android/icon-192.png',
         sizes: '192x192',
         type: 'image/png',
+        purpose: 'any',
       },
       {
-        src: '/android/icon-512.png',
-        sizes: '512x512',
-        type: 'image/png',
-      },
-      {
-        src: '/android/maskable-icon-192.png',
+        src: '/android/icon-192-maskable.png',
         sizes: '192x192',
         type: 'image/png',
         purpose: 'maskable',
       },
       {
-        src: '/android/maskable-icon-512.png',
+        src: '/android/icon-384.png',
+        sizes: '384x384',
+        type: 'image/png',
+        purpose: 'any',
+      },
+      {
+        src: '/android/icon-384-maskable.png',
+        sizes: '384x384',
+        type: 'image/png',
+        purpose: 'maskable',
+      },
+      {
+        src: '/android/icon-512.png',
         sizes: '512x512',
+        type: 'image/png',
+        purpose: 'any',
+      },
+      {
+        src: '/android/icon-512-maskable.png',
+        sizes: '512x512',
+        type: 'image/png',
+        purpose: 'maskable',
+      },
+      {
+        src: '/android/icon-1024.png',
+        sizes: '1024x1024',
+        type: 'image/png',
+        purpose: 'any',
+      },
+      {
+        src: '/android/icon-1024-maskable.png',
+        sizes: '1024x1024',
         type: 'image/png',
         purpose: 'maskable',
       },
@@ -272,7 +402,10 @@ export function generateBrowserConfig(): string {
 /**
  * Generates an HTML snippet with documented sections
  */
-export function generateHTMLSnippet(isPremium: boolean): string {
+export function generateHTMLSnippet(
+  isPremium: boolean,
+  manifestOptions?: ManifestOptions
+): string {
   const basicFavicons = `<!-- Basic Favicons -->
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 <link rel="icon" type="image/png" sizes="16x16" href="/web/favicon-16x16.png">
@@ -282,6 +415,9 @@ export function generateHTMLSnippet(isPremium: boolean): string {
   if (!isPremium) {
     return basicFavicons
   }
+
+  const themeColor = manifestOptions?.themeColor ?? DEFAULT_MANIFEST_OPTIONS.themeColor
+  const appName = manifestOptions?.shortName ?? DEFAULT_MANIFEST_OPTIONS.shortName
 
   return `${basicFavicons}
 
@@ -295,7 +431,14 @@ export function generateHTMLSnippet(isPremium: boolean): string {
 
 <!-- Windows -->
 <meta name="msapplication-TileImage" content="/windows/mstile-150x150.png">
-<meta name="msapplication-config" content="/browserconfig.xml">`
+<meta name="msapplication-config" content="/browserconfig.xml">
+
+<!-- Theme & PWA Meta -->
+<meta name="theme-color" content="${themeColor}">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="${appName}">
+<meta name="mobile-web-app-capable" content="yes">`
 }
 
 // ============ MAIN ORCHESTRATOR ============
@@ -322,10 +465,9 @@ export async function generateAllFormats(
 
   // Generate maskable formats (premium only)
   if (isPremium) {
-    const bgColor =
-      manifestOptions?.backgroundColor ||
-      DEFAULT_MANIFEST_OPTIONS.backgroundColor
-    const maskableResults = await generateMaskableFormats(imageData, bgColor)
+    // Extract dominant border color for maskable icon padding
+    const paddingColor = await extractDominantBorderColor(imageData)
+    const maskableResults = await generateMaskableFormats(imageData, paddingColor)
     for (const result of maskableResults) {
       if (result.success) {
         formats.push(result.format)
@@ -342,7 +484,7 @@ export async function generateAllFormats(
   const browserConfig = isPremium ? generateBrowserConfig() : null
 
   // Generate HTML snippet
-  const htmlSnippet = generateHTMLSnippet(isPremium)
+  const htmlSnippet = generateHTMLSnippet(isPremium, manifestOptions)
 
   return {
     formats,
